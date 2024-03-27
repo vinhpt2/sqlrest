@@ -1,0 +1,322 @@
+var _context={
+	user:{},
+	apps:{},
+	domain:{},
+	winconfig:{},
+	extent:{},
+	layer:{
+		byName:{}
+	},
+	curApp:null,
+	curWinid:null,
+	workflow:{}
+};
+var _isMobile=(window.orientation!==undefined);
+function body_onLoad(){
+	var id="divApp";
+	var div=document.getElementById(id);
+	w2ui[id]?w2ui[id].render(div):
+	$(div).w2layout({
+		name: id,
+		panels: [
+			{ type: 'top', size: '28px', content: '<b id="labCurrentApp"></b><span style="float:right"><img id="imgClientLogo" width="20" height="20" src="img/nut.ico"/><a id="labLoginClient" class="nut-link" onclick="openMain();if(w2ui.w2menu.flat)w2ui.w2menu.goFlat()"></a>><i class="nut-link" id="labLoginUser" onclick="labLoginUser_onClick()"></i></span><div id="divTop"></div>' },
+			{ type: 'left', size: (_isMobile?"100%":"360px"), resizable: true, content: '<div id="divLeft" class="nut-full"><div id="divLogin" style="width:360px;height:220px;top:25%;margin:auto"></div></div>' },
+			{ type: 'main', content: '<div id="divMain" class="nut-full" style="background:url(\'img/nutboat.jpg\') no-repeat;background-size:cover"><div id="divTitle" style="padding:20px"><img width="64" height="64" src="img/nut.ico"/><h2 style="color:brown">NUT version 1.0<h2/><hr/><h3><i>No-code Universal application Tools</i><h3/></div></div>' }
+		],
+		onResize:function(evt){
+			evt.onComplete=function(){
+				if(GSMap)GSMap.resize();
+			}
+		}
+	});
+
+	var record=NUT.getStorageUser();
+	var id="divLogin";
+	var div=document.getElementById(id);
+	w2ui[id]?w2ui[id].render(div):
+	$(div).w2form({
+		name: id,
+		header: '🔑 <i>Login</i>',
+		fields: [
+			{ field: 'Username', type: 'text'},
+			{ field: 'Password', type: 'password'},
+			{ field: 'SavePassword', type: 'checkbox'},
+		],
+		record: record,
+		actions: {
+			"❔ Help": function(){},
+			"✔️ Login": function () {
+				labCurrentApp.innerHTML="<img src='img/wait.gif'/>";
+				var self=this;
+				NUT.DS.select({from:"sysuser",where:[["username","=",this.record.Username],["password","=",this.record.Password]]},function(res){
+					if(res.length==1){
+						_context.user=res[0];
+						NUT.setStorageUser(record.Username,record.Password,record.SavePassword);
+						NUT_DS.select({url:NUT_URL+"sysclient",where:["clientid","=",_context.user.clientid]},function(clients){
+							if(clients.length){
+								var client=clients[0];
+								_context.client={clientid:client.clientid,name:client.clientname,desc:client.description,icon:client.iconclient,code:client.clientcode,backimg:client.imagebackground};
+								labLoginClient.innerHTML=_context.client.name;
+								labLoginClient.title=_context.client.desc;
+								labLoginUser.innerHTML=_context.user.username;
+								labLoginUser.title=_context.user.description;	
+								imgClientLogo.src="client/"+_context.client.clientid+"/img/"+ _context.client.icon;
+								openMain();
+								renderMain(_context.client);
+							}
+						});
+					}else{
+						NUT.tagMsg("No Username/Password found!",'yellow');
+					}
+					labCurrentApp.innerHTML="";
+				},true);
+			}
+		}
+	});
+
+}
+function renderMain(info){
+	if(!info)info=_context.client;
+	divMain.innerHTML="<div id='divTitle' style='padding:10px'><img width='64' height='64' src='client/"+info.clientid+"/img/"+info.icon+"'><br/><h2 style='color:brown'>"+info.name+"</h2><hr/><h3><i>"+info.desc+"</i><h3/></div>";
+	if(info.backimg)divMain.style.backgroundImage="url('client/"+info.clientid+"/img/"+info.backimg+"')";
+}
+function labLoginUser_onClick(){
+	$(labLoginUser).w2menu({
+		items:[{id:"ACC",text:"My account"},{id:"PASS",text:"Change password"},{text:'--'},{id:"OUT",text:"Logout"}],
+		onSelect:function(evt){
+			switch(evt.item.id){
+				case "ACC":
+					var user=_context.user;
+					w2alert("<table><tr><td><b><i>Tài khoản:</i></b></td><td colspan='3'>"+user.username+"</td></tr><tr><td><b><i>Họ tên:</i></b></td><td colspan='3'>"+user.fullname+"</td></tr><tr><td><b><i>Điện thoại:</i></b></td><td>"+user.phone+"</td><td><b><i>Nhóm:</i></b></td><td>"+user.groupid+"</td></tr><tr><td><b><i>Trạng thái:</i></b></td><td>"+user.status+"</td><td><b><i>Ghi chú:</i></b></td><td>"+user.description+"</td></tr></table>","<b>ℹ️ Information #<i>"+user.userid+"</i></b>");break;
+				case "PASS":
+					w2popup.open({
+						title:"🔑 <i>Change password</i>",
+						speed:0,
+						width:400,
+						height:210,
+						body:"<table style='margin:auto'><tr><td>*Old password:</b></td><td><input id='txtUser_PasswordOld' type='password'/></td></tr><tr><td>*New password:</b></td><td><input id='txtUser_PasswordNew' type='password'/></td></tr><tr><td>*Re-type password:</b></td><td><input id='txtUser_PasswordNew2' type='password'/></td></tr></table>",
+						buttons: '<button class="w2ui-btn" onclick="w2popup.close()">⛌ Close</button><button class="w2ui-btn" onclick="userChangePassword()">✔️ Ok</button>'
+					});
+					break;
+				case "OUT":
+					location.reload();
+					break;
+			}
+		}
+	});
+}
+function userChangePassword(){
+	var user=_context.user;
+	if(txtUser_PasswordOld.value&&txtUser_PasswordNew.value&&txtUser_PasswordNew2.value){
+		if(txtUser_PasswordOld.value==user.password&&txtUser_PasswordNew.value==txtUser_PasswordNew2.value)
+			NUT_DS.update({url:NUT_URL+"sysuser",data:{password:txtUser_PasswordNew.value},where:[["userid","=",user.userid],["password","=",txtUser_PasswordOld.value]]},function(res){
+				w2alert("<span style='color:green'>Password change!</span>");
+			})
+		else w2alert("<span style='color:orange'>Passwords not match!</span>");
+	}else w2alert("<span style='color:orange'>Old password, new password and retype password are all required!</span>");
+}
+function openMain() {
+	if(_context.client)renderMain();
+	NUT_DS.select({url:NUT_URL+"sv_access_application",order:"orderno",where:["userid","=",_context.user.userid]},function(res){
+		var html="<div id='divTitle'>&nbsp;📦&nbsp;<i id='labApp' style='color:brown'>Applications</i><br/><center>";
+		var id=null;
+		for(var i=0;i<res.length;i++){
+			var data=res[i];
+			if(data.applicationid!=null){
+				if(id==data.applicationid){
+					if(data.roleid)_context.apps[id].roles.push(data.roleid);
+				}else{
+					id=data.applicationid;
+					_context.apps[id]={clientid:data.appclientid,applicationid:id,name:data.applicationname,link:data.linkurl,type:data.applicationtype,icon:data.icon,code:data.colorcode,desc:data.description,roles:[data.roleid]};
+					html+="<div class='nut-tile' style='background:"+data.colorcode+"' onclick='openApplication("+id+")' onmouseover='labApp.innerHTML=\""+data.description+"\"'><img src='client/"+data.appclientid+"/img/"+data.icon+"'><br/>"+data.applicationname+"</div>";
+				}
+			}
+		};
+		html+="</center></div>";
+		divLeft.innerHTML=html;
+		
+		if(res.length==1)openApplication(id);
+	});
+	GSMap.loadLibrary();
+}
+function openApplication(idApp){
+	//load menu
+	labCurrentApp.innerHTML="<img src='img/wait.gif'/>";
+	_context.curWinid=null;
+	_context.curApp=_context.apps[idApp];
+	
+	if(_context.curApp.type=="engine"){
+		window.open(_context.curApp.link+"?username="+_context.user.username+"&clientid="+_context.user.clientid);
+		labCurrentApp.innerHTML="";
+	}else {
+		var isGis=(_context.curApp.type=="gis");
+		divMain.innerHTML="";
+		divMain.style.backgroundImage="";
+		
+		if(isGis){
+			NUT_DS.select({url:NUT_URL+"sv_map_service",order:"orderno",where:["applicationid","=",idApp]},function(maps){
+				if(maps.length){
+					var lookup={};
+					for(var i=0;i<maps.length;i++){
+						var map=maps[i];
+						map.subLayers=[];
+						lookup[map.mapid]=map;
+					}
+					NUT_DS.select({url:NUT_URL+"syslayer",order:"orderno",where:["applicationid","=",idApp]},function(res){
+						for(var i=0;i<res.length;i++){
+							var lyr=res[i];
+							lyr.maporder=lookup[lyr.mapid].orderno;
+							lookup[lyr.mapid].subLayers.push(lyr);
+						}
+						var layers=[];
+						for(var i=0;i<maps.length;i++)if(maps[i].subLayers.length)layers.push(maps[i]);
+						divMain.innerHTML="<div id='divMapTool'></div>";
+						w2ui.divApp.sizeTo("left","50%",true);
+						GSMap.createMap({
+							layers:layers,
+							divMap:divMain,
+							divTool:divMapTool,
+							view:{
+								center: [108, 16],
+								zoom: 11
+							}
+						});
+						GSMap.awBasic.onFeatureSelect=map_onSelect;
+					})
+				}
+			});
+		} else {
+			w2ui.divApp.sizeTo("left",_isMobile?"100%":"300px",true);
+			renderMain(_context.curApp);
+		}
+		//load domain
+		NUT_DS.select({url:NUT_URL+"sysdomain",clientid:_context.curApp.clientid,where:["applicationid","=",idApp]},function(res){
+			_context.domain=NUT.configDomain(res);
+		});
+		//load service
+		NUT_DS.select({url:NUT_URL+"sv_appservice_service",clientid:_context.curApp.clientid,where:["applicationid","=",idApp]},function(res){
+			_context.service={};
+			for(var i=0;i<res.length;i++)_context.service[res[i].servicename]=res[i];
+		});
+		NUT_DS.select({url:NUT_URL+"sv_rolemenu_menuitem",clientid:_context.curApp.clientid,where:[["menuitemtype","=","menu"],["applicationid","=",idApp],["roleid","in",_context.curApp.roles]]},function(res){
+			var ids={},pids={};
+			for(var i=0;i<res.length;i++){
+				if(res[i].menuitemid)ids[res[i].menuitemid]=true;
+				if(res[i].parentid)pids[res[i].parentid]=true;
+			}
+			NUT_DS.select({url:NUT_URL+"sysmenuitem",clientid:_context.curApp.clientid,order:"orderno",where:["or",["menuitemid","in",Object.keys(ids)],["menuitemid","in",Object.keys(pids)]]},function(menuitems){
+				var nodes=[], lookup={}, openWindowId=null;
+				for(var i=0;i<menuitems.length;i++){
+					var menuitem=menuitems[i];
+					var isSummary=(menuitem.issummary!=null);
+					if(!isSummary&&menuitem.isopen)openWindowId=menuitem.linkwindowid;
+					var node={type:(isSummary?'menu':'button'), id:menuitem.menuitemid, text: menuitem.menuitemname, group:isSummary, expanded:menuitem.isopen, tag:menuitem.linkwindowid?menuitem.linkwindowid:menuitem.execname};
+					if(menuitem.parentid)isGis?lookup[menuitem.parentid].items.push(node):lookup[menuitem.parentid].nodes.push(node);
+					else nodes.push(node);
+					if(isSummary)isGis?node.items=[]:node.nodes=[];
+					lookup[node.id]=node;
+				};
+				var id='w2menu';
+				if(w2ui[id])
+					w2ui[id].render(isGis?divTop:divLeft);
+				else
+					isGis?$(divTop).w2toolbar({name:id,items: nodes,onClick:menu_onClick}):$(divLeft).w2sidebar({name:id,flatButton:true,nodes: nodes,topHTML:"<i class='nut-link'>MENU</i>",onClick:menu_onClick,onFlat:function(evt){
+						var width=_isMobile?"100%":"300px";
+						w2ui.divApp.sizeTo("left",evt.goFlat?'60px':width,true);
+						$(id).css('width', (evt.goFlat?'60px':width));
+					}});
+				
+				if(openWindowId)menu_onClick({item:{tag:openWindowId}});
+				labCurrentApp.innerHTML="<img src='client/"+_context.curApp.clientid+"/img/"+_context.curApp.icon+"' width='20' height='20'/> "+_context.curApp.name;
+				labCurrentApp.title=_context.curApp.desc;
+			});
+		});
+	}
+}
+function map_onSelect(evt){
+	if(evt.tool=="toolSelect"){
+		var tabconf=_context.winconfig[_context.curWinid].tabs[0];
+		var grid=w2ui["divgrid_"+tabconf.tabid];
+		var where=["or"];
+		for(var i=0;i<evt.features.length;i++){
+			var feat=evt.features[i];
+			var lyrconf=GSMap.getLayerConfig(feat.getId().split(".")[0]);
+			if(lyrconf.windowid==_context.curWinid){
+				var attr=feat.getProperties();
+				var clause=[];
+				for(var j=0;j<tabconf.fields.length;j++){
+					var field=tabconf.fields[j];
+					if(field.columndohoa&&attr[field.columndohoa]){
+						if(attr[field.columndohoa])clause.push([field.columndohoa,"=",attr[field.columndohoa]]);
+						else {clause=[];break}
+					}
+				}
+				if (clause.length)where.push(clause);
+			}
+		}
+		if(where.length>1){
+			grid.postData.select=where;
+			grid.load(tabconf.urledit);
+		}
+	}
+}
+function cacheDomainAndOpenWindow(div,conf,needCaches,index){
+	var fldconf=needCaches[index];
+	if(fldconf)NUT_DS.select({url:fldconf.foreigntable,select:[fldconf.columnkey,fldconf.columndisplay],where:(fldconf.wherefieldname?JSON.parse(fldconf.wherefieldname):null)},function(res){
+		var domain={items:[],lookup:{}};
+		for(var i=0;i<res.length;i++){
+			var item={id:res[i][fldconf.columnkey],text:res[i][fldconf.columndisplay]};
+			domain.items.push(item);
+			domain.lookup[item.id]=item.text;
+		}
+		_context.domain[fldconf.foreigntable]=domain;
+		if(++index<needCaches.length)cacheDomainAndOpenWindow(conf,needCaches,index);
+		else NWIN.buildWindow(div,conf,0);
+	});
+	else NWIN.buildWindow(div,conf,0); 
+}
+function menu_onClick(evt){
+	var tag=evt.item?((evt.item.group)?(evt.subItem&&!evt.subItem.group?evt.subItem.tag:null):evt.item.tag):evt.node.tag;
+	if(Number.isInteger(tag)){
+		var a=NWIN.createWindowTitle(tag,divTitle);
+		if(a){
+			var conf=_context.winconfig[tag];
+			if(conf){
+				if(conf.componentname)
+					runComponent(conf.componentname,a.div);
+				else{
+					conf.tabs[0].tempWhere=evt.tempWhere;
+					NWIN.buildWindow(a.div,conf,0);
+				}
+				a.innerHTML=conf.windowname;
+			}else{
+				//a.div.innerHTML="<img src='img/wait.gif'/>";
+				NUT_DS.select({url:NUT_URL+"syscache",clientid:_context.curApp.clientid,where:["windowid","=",tag]},function(res){
+					if(res.length){
+						conf=NUT.configWindow(zipson.parse(res[0].config),JSON.parse(res[0].layout));
+						if(conf.componentname)runComponent(conf.componentname,a.div);
+						else{
+							conf.tabs[0].tempWhere=evt.tempWhere;
+							conf.tabid=conf.windowid;
+							_context.winconfig[tag]=conf;
+							//a.div.innerHTML="";
+							var needCaches=[];
+							for(key in conf.needCache)if(conf.needCache.hasOwnProperty(key)&&!_context.domain[key])
+								needCaches.push(conf.needCache[key]);
+							cacheDomainAndOpenWindow(a.div,conf,needCaches,0);
+						}
+						a.innerHTML=conf.windowname;
+					}
+				});
+			}
+			if(_isMobile&&!w2ui.w2menu.flat)w2ui.w2menu.goFlat();
+		}
+		_context.curWinid=tag;
+	}else{
+		runComponent(tag);
+	}
+}
+function linkfield_onClick(windowid,value,wherefield){
+	menu_onClick({item:{tag:windowid},tempWhere:[wherefield,"=",value]});
+	event.stopImmediatePropagation();
+}

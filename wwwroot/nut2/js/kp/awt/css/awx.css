@@ -1,0 +1,27 @@
+﻿.modaless_underlay { display:none }
+.awbasic-png { background-image: url("awbasic.png"); height: 16px; width: 16px }
+.awedit-png { background-image: url("awedit.png"); height: 16px; width: 16px }
+.awdraw-png { background-image: url("awdraw.png"); height: 16px; width: 16px }
+.awsnap-png { background-image: url("awsnap.png"); height: 16px; width: 16px }
+.awtoolbox-png { background-image: url("awtoolbox.png"); height: 16px; width: 16px }
+.ok-png { background-image: url("ok.png"); height: 16px; width: 16px }
+.aw-dlg{
+	position:absolute;
+	top:30px;
+	right:0px;
+	z-index:9999;
+	background:rgb(255,255,255,0.5)
+}
+.aw-dlg-content{
+	margin:auto;
+	padding:1px;
+	border:1px outset;
+	background:whitesmoke;
+}
+.aw-dlg-title{
+	margin:auto;
+	padding:1px;
+	border:1px outset;
+	background:#E5E4E2;
+	text-align:center
+}
