@@ -8,7 +8,7 @@ namespace SQLRestC
         public static String server;
         public static String username;
         public static String password;
-        public const String ROOT = "api/";
+        public const String ROOT = "rest/";
         public const String MS_PATH = "MS_Path";
         public const String MS_DESCRIPTION = "MS_Description";
         public const int LIMIT = 100;
@@ -205,7 +205,8 @@ namespace SQLRestC
     public class ResponseJson
     {
         public bool success { get; set; }
-        public Object results { get; set; }
+        public Object result { get; set; }
+        public int total { get; set; }
     }
 
     public class QueryJson

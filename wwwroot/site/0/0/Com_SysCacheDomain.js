@@ -3,7 +3,7 @@ var Com_SysCacheDomain={
 		if(p.records.length){
 			this.service=p.records[0];
 			var self=this;
-			NUT_DS.select({url:NUT_URL+"systable",where:[["serviceid","=",this.service.serviceid],["iscache","=",true]]},function(res){
+			NUT.ds.select({url:NUT.URL+"systable",where:[["serviceid","=",this.service.serviceid],["iscache","=",true]]},function(res){
 				if(res.length){
 					lookup={};
 					for(var i=0;i<res.length;i++)lookup[res[i].tablename]=res[i];
@@ -49,16 +49,16 @@ var Com_SysCacheDomain={
 		});
 	},
 	cacheDomain:function(table){
-		NUT_DS.select({url:table.urledit,select:[table.columnkey,table.columndisplay]},function(res){
+		NUT.ds.select({url:table.urledit,select:[table.columnkey,table.columndisplay]},function(res){
 			var domains=[];
 			for(var i=0;i<res.length;i++)domains.push([res[i][table.columnkey],res[i][table.columndisplay]]);
 			var data={
 				clientid:_context.user.clientid,
-				//applicationid:_context.curApp.applicationid,
+				//appid:_context.curApp.appid,
 				domainname:table.tablename,
 				domain:JSON.stringify(domains)
 			};
-			NUT_DS.update({url:NUT_URL+"sysdomain",where:["tableid","=",table.tableid],data:data},function(res){
+			NUT.ds.update({url:NUT.URL+"sysdomain",where:["tableid","=",table.tableid],data:data},function(res){
 				NUT.tagMsg("Domain cache updated.","lime");
 			});
 		});

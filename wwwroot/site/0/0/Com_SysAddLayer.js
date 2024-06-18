@@ -3,9 +3,9 @@ var Com_SysAddLayer={
 		if(p.parent){
 			this.app=p.parent;
 			var self=this;
-			NUT_DS.select({url:NUT_URL+"sv_appservice_table",where:[["applicationid","=",this.app.applicationid],["tabletype","=","gis"]]},function(tables){
+			NUT.ds.select({url:NUT.URL+"nv_appservice_table",where:[["appid","=",this.app.appid],["tabletype","=","gis"]]},function(tables){
 				if(tables.length)
-					NUT_DS.select({url:NUT_URL+"syslayer",where:["applicationid","=",self.app.applicationid]},function(res){
+					NUT.ds.select({url:NUT.URL+"syslayer",where:["appid","=",self.app.appid]},function(res){
 						var existLayers={};
 						for(var i=0;i<res.length;i++) existLayers[res[i].tableid]=res[i];
 						self.showDlgAdd(tables, existLayers)
@@ -56,7 +56,7 @@ var Com_SysAddLayer={
 									if(change[key]){
 										var table=lookupTable[key];
 										i++;
-										layers.push({layername:table.tablename,alias:table.alias,orderno:i,layerindex:i,applicationid:table.applicationid,serviceid:table.serviceid,tableid:table.tableid,clientid:_context.user.clientid});
+										layers.push({layername:table.tablename,alias:table.alias,seqno:i,layerindex:i,appid:table.appid,serviceid:table.serviceid,tableid:table.tableid,clientid:_context.user.clientid});
 									}
 								}
 								self.insertLayers(layers);
@@ -68,7 +68,7 @@ var Com_SysAddLayer={
 		});
 	},
 	insertLayers:function(layers){
-		NUT_DS.insert({url:NUT_URL+"syslayer",data:layers},function(res){
+		NUT.ds.insert({url:NUT.URL+"syslayer",data:layers},function(res){
 			if(res.length)NUT.tagMsg("Records inserted.","lime");
 		});
 	}

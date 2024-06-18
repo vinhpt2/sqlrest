@@ -35,14 +35,14 @@ namespace SQLRestC.Controllers
                             });
                         }
                     }
-                    response.results = jsonArr;
-                } else response.results = "Database '" + database + "' not found!";
+                    response.result = jsonArr;
+                } else response.result = "Database '" + database + "' not found!";
                 return response;
 
             }
             catch (Exception ex)
             {
-                return new ResponseJson { success = false, results = ex.Message };
+                return new ResponseJson { success = false, result = ex.Message };
             }
             finally
             {
@@ -67,7 +67,7 @@ namespace SQLRestC.Controllers
                     response.success = (obj != null);
                     if (response.success)
                     {
-                        response.results = new SchemaJson
+                        response.result = new SchemaJson
                         {
                             id = obj.ID,
                             name = obj.Name,
@@ -75,14 +75,14 @@ namespace SQLRestC.Controllers
                         };
 
                     }
-                    else response.results = "Schema '" + database+"."+name + "' not found!";
+                    else response.result = "Schema '" + database+"."+name + "' not found!";
                 }
-                else response.results = "Database '" + database + "' not found!";
+                else response.result = "Database '" + database + "' not found!";
                 return response;
             }
             catch (Exception ex)
             {
-                return new ResponseJson { success = false, results = ex.Message };
+                return new ResponseJson { success = false, result = ex.Message };
             }
             finally
             {
@@ -108,16 +108,16 @@ namespace SQLRestC.Controllers
                     {
                         var obj = new Schema(db, name);
                         obj.Create();
-                        response.results = obj.Name;
+                        response.result = obj.Name;
                     }
-                    else response.results = "Schema '" + database + "." + name + "' already exists!";
+                    else response.result = "Schema '" + database + "." + name + "' already exists!";
                 }
-                else response.results = "Database '" + database + "' not found!";
+                else response.result = "Database '" + database + "' not found!";
                 return response;
             }
             catch (Exception ex)
             {
-                return new ResponseJson { success = false, results = ex.Message };
+                return new ResponseJson { success = false, result = ex.Message };
             }
             finally
             {
@@ -143,14 +143,14 @@ namespace SQLRestC.Controllers
                     {
                         obj.Name= newName;
                     }
-                    else response.results = "Schema '" + database + "." + name + "' not found!";
+                    else response.result = "Schema '" + database + "." + name + "' not found!";
                 }
-                else response.results = "Database '" + database + "' not found!";
+                else response.result = "Database '" + database + "' not found!";
                 return response;
             }
             catch (Exception ex)
             {
-                return new ResponseJson { success = false, results = ex.Message };
+                return new ResponseJson { success = false, result = ex.Message };
             }
             finally
             {
@@ -176,14 +176,14 @@ namespace SQLRestC.Controllers
                     {
                         obj.Drop();
                     }
-                    else response.results = "Schema '" + database + "." + name + "' not found!";
+                    else response.result = "Schema '" + database + "." + name + "' not found!";
                 }
-                else response.results = "Database '" + database + "' not found!";
+                else response.result = "Database '" + database + "' not found!";
                 return response;
             }
             catch (Exception ex)
             {
-                return new ResponseJson { success = false, results = ex.Message };
+                return new ResponseJson { success = false, result = ex.Message };
             }
             finally
             {

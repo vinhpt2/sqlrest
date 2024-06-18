@@ -7,7 +7,7 @@ var Com_SysPreviewWindow={
 			if(conf){
 				self.showDlgWorkflow(conf);
 			}else{
-				NUT_DS.select({url:NUT_URL+"syscache",where:["windowid","=",windowid]},function(res){
+				NUT.ds.select({url:NUT.URL+"syscache",where:["windowid","=",windowid]},function(res){
 					if(res.length){
 						conf=NUT.configWindow(zipson.parse(res[0].config));
 						conf.tabid=conf.windowid;

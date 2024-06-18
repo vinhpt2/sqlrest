@@ -13,7 +13,7 @@ var Com_SysApplicationWizard={
 		var id="divCom_SysApplicationWizard";
 		this.a=createWindowTitle(id);
 		this.a.innerHTML='Wizard.'+ self.app.applicationname;
-		this.a.div.innerHTML='<iframe id="'+id+'" style="width:850px;height:550px;border:none;background:white" src="client/0/html/step1.html"></iframe></br><button id="butBack" class="w2ui-btn" onclick="Com_SysApplicationWizard.go(-1)">Close</button> <button id="butNext" class="w2ui-btn" onclick="Com_SysApplicationWizard.go(1)">Next</button>';
+		this.a.div.innerHTML='<iframe id="'+id+'" style="width:850px;height:550px;borderby:none;background:white" src="client/0/html/step1.html"></iframe></br><button id="butBack" class="w2ui-btn" onclick="Com_SysApplicationWizard.go(-1)">Close</button> <button id="butNext" class="w2ui-btn" onclick="Com_SysApplicationWizard.go(1)">Next</button>';
 	},
 	go:function(index){
 		var id="divCom_SysApplicationWizard";
@@ -35,7 +35,7 @@ var Com_SysApplicationWizard={
 				]
 			});
 
-			this.designApp(this.app.applicationid);
+			this.designApp(this.app.appid);
 		}else if(this.step==1&&index<0){//close
 			this.a.div.remove();
 			this.a.nextElementSibling.remove();
@@ -66,13 +66,13 @@ var Com_SysApplicationWizard={
 		var isGis=(this.app.applicationtype=="gis");
 		(isGis?divLeftWz:divMainWz).innerHTML="<div id='divTitleWz'><button onclick='menu_onClick({item:{tag:3}})'>NEW WINDOW</button></div>";
 		//load menu
-		NUT_DS.select({url:NUT_URL+"sv_rolemenu_menuitem",where:[["menuitemtype","=","menu"],["applicationid","=",this.app.applicationid]]},function(res){
+		NUT.ds.select({url:NUT.URL+"nv_rolemenu_menuitem",where:[["menuitemtype","=","menu"],["appid","=",this.app.appid]]},function(res){
 			var ids={},pids={};
 			for(var i=0;i<res.length;i++){
 				if(res[i].menuitemid)ids[res[i].menuitemid]=true;
 				if(res[i].parentid)pids[res[i].parentid]=true;
 			}
-			NUT_DS.select({url:NUT_URL+"sysmenuitem",order:"orderno",where:["or",["menuitemid","in",Object.keys(ids)],["menuitemid","in",Object.keys(pids)]]},function(menuitems){
+			NUT.ds.select({url:NUT.URL+"sysmenuitem",orderby:"seqno",where:["or",["menuitemid","in",Object.keys(ids)],["menuitemid","in",Object.keys(pids)]]},function(menuitems){
 				var nodes=[{type:'button', id:"EDIT_MENU", text: "EDIT MENU"}], lookup={};
 				for(var i=0;i<menuitems.length;i++){
 					var menuitem=menuitems[i];
@@ -97,7 +97,7 @@ var Com_SysApplicationWizard={
 			});
 		});
 		//load window
-		NUT_DS.select({url:NUT_URL+"syswindow",order:"windowname",where:[["windowtype","=","window"],["applicationid","=",this.app.applicationid]]},function(res){
+		NUT.ds.select({url:NUT.URL+"syswindow",orderby:"windowname",where:[["windowtype","=","window"],["appid","=",this.app.appid]]},function(res){
 			for(var i=0;i<res.length;i++)self.createWindowTitle(res[i]);
 		})
 	},
@@ -179,7 +179,7 @@ var Com_SysApplicationWizard={
 		div.appendChild(butTab);
 		div.appendChild(butLayout);
 		var self=this;
-		NUT_DS.select({url:NUT_URL+"systab",order:["tablevel","orderno"],where:["windowid","=",win.windowid]},function(tabs){
+		NUT.ds.select({url:NUT.URL+"systab",orderby:["tablevel","seqno"],where:["windowid","=",win.windowid]},function(tabs){
 			if(tabs.length){
 				var lookupTab={},winconf={tabs:[],tabid:win.windowid};
 				for(var i=0;i<tabs.length;i++){

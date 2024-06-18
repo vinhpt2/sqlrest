@@ -6,11 +6,11 @@ var Com_SysLayoutWindow={
 			this.win=p.records[0];
 			this.divField=document.createElement("div");
 			var self=this;
-			NUT_DS.select({url:NUT_URL+"syscache",select:"layout",where:["windowid","=",self.win.windowid]},function(res){
+			NUT.ds.select({url:NUT.URL+"syscache",select:"layout",where:["windowid","=",self.win.windowid]},function(res){
 				if(res.length&&res[0].layout){
 					self.layouts=JSON.parse(res[0].layout);
 				}
-				NUT_DS.select({url:NUT_URL+"systab",order:["tablevel","orderno"],where:["windowid","=",self.win.windowid]},function(tabs){
+				NUT.ds.select({url:NUT.URL+"systab",orderby:["tablevel","seqno"],where:["windowid","=",self.win.windowid]},function(tabs){
 					if(tabs.length){
 						var lookupTab={},lookupDiv={},winconf={tabs:[],tabid:self.win.windowid,windowname:self.win.windowname},ids=[];
 						for(var i=0;i<tabs.length;i++){
@@ -60,7 +60,7 @@ var Com_SysLayoutWindow={
 							self.divField.appendChild(table);
 							lookupDiv[tab.tabid]=table;
 						}
-						NUT_DS.select({url:NUT_URL+"sysfield",order:"tabid,orderno",where:["tabid","in",ids]},function(fields){
+						NUT.ds.select({url:NUT.URL+"sysfield",orderby:"tabid,seqno",where:["tabid","in",ids]},function(fields){
 							if(fields.length){
 								for(var i=0;i<fields.length;i++){
 									var field=fields[i];
@@ -145,7 +145,7 @@ var Com_SysLayoutWindow={
 									break;
 								case "RESET":
 									w2confirm('Reset layout will delete all layouts. Auto layout will be used. Continue?', function btn(answer) {
-										if(answer=='Yes')NUT_DS.update({url:NUT_URL+"syscache",where:["windowid","=",self.win.windowid],data:{layout:null}},function(res){
+										if(answer=='Yes')NUT.ds.update({url:NUT.URL+"syscache",where:["windowid","=",self.win.windowid],data:{layout:null}},function(res){
 											for(var key in self.layouts)if(self.layouts.hasOwnProperty(key)){
 												var layout=self.layouts[key];
 												if(layout.innerHTML){
@@ -414,7 +414,7 @@ var Com_SysLayoutWindow={
 			layout[key]=div.innerHTML;
 		}
 		
-		NUT_DS.update({url:NUT_URL+"syscache",where:["windowid","=",this.win.windowid],data:{layout:JSON.stringify(layout)}},function(res){
+		NUT.ds.update({url:NUT.URL+"syscache",where:["windowid","=",this.win.windowid],data:{layout:JSON.stringify(layout)}},function(res){
 			w2alert("Layout's cache updated.","ℹ️ Inform");
 		});
 	},

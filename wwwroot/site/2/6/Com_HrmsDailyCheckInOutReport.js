@@ -23,7 +23,7 @@ var Com_HrmsDailyCheckInoutReport={
 	},
 	runReport:function(){
 		if(numTinhCong_Year.value&&numTinhCong_Month.value){
-			NUT_DS.select({url:_context.service["hrms"].urledit+"rpt_dailycheckinout",where:[["nam","=",numTinhCong_Year.value],["thang","=",numTinhCong_Month.value],["madoitac","=",cboTinhCong_DoiTac.value],["thitruong","=",cboTinhCong_ThiTruong.value],["dulieu","=",chkTinhCong_Edit.checked?1:0]]},function(res){
+			NUT.ds.select({url:_context.service["hrms"].urledit+"rpt_dailycheckinout",where:[["nam","=",numTinhCong_Year.value],["thang","=",numTinhCong_Month.value],["madoitac","=",cboTinhCong_DoiTac.value],["thitruong","=",cboTinhCong_ThiTruong.value],["dulieu","=",chkTinhCong_Edit.checked?1:0]]},function(res){
 				if(res.length){
 					var win=window.open("client/"+_context.user.clientid+"/html/DailyCheckInoutReport.html");
 					win.onload=function(){

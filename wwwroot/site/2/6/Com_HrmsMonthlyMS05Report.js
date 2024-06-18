@@ -24,8 +24,8 @@ var Com_HrmsMonthlyMS05Report={
 	runReport:function(){
 		if(numTinhCong_Year.value&&numTinhCong_Month.value){
 			var url=_context.service["hrms"].urledit;
-			NUT_DS.select({url:url+"phucap",where:[["nam","=",numTinhCong_Year.value],["thang","=",numTinhCong_Month.value],["vitrilv","=","PG"]]},function(phucaps){
-				if(phucaps.length)NUT_DS.select({url:url+"rpt_monthlysum",where:[["nam","=",numTinhCong_Year.value],["thang","=",numTinhCong_Month.value],["madoitac","=",cboTinhCong_DoiTac.value],["dulieu","=",chkTinhCong_Edit.checked?1:0]]},function(res){
+			NUT.ds.select({url:url+"phucap",where:[["nam","=",numTinhCong_Year.value],["thang","=",numTinhCong_Month.value],["vitrilv","=","PG"]]},function(phucaps){
+				if(phucaps.length)NUT.ds.select({url:url+"rpt_monthlysum",where:[["nam","=",numTinhCong_Year.value],["thang","=",numTinhCong_Month.value],["madoitac","=",cboTinhCong_DoiTac.value],["dulieu","=",chkTinhCong_Edit.checked?1:0]]},function(res){
 					if(res.length){
 						var pcPG=phucaps[0];
 						var win=window.open("client/"+_context.user.clientid+"/html/MonthlyMS05Report.html");

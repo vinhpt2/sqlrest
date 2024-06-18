@@ -2,7 +2,7 @@ var Com_HrmsCheckInOut={
 	run:function(p){
 		var self=this;
 		self.urledit=_context.service["hrms"].urledit;
-		NUT_DS.select({url:self.urledit+"nhanvien_v",select:"makhuvuc,madoitac",where:["manhanvien","=",_context.user.username]},function(nv){
+		NUT.ds.select({url:self.urledit+"nhanvien_v",select:"makhuvuc,madoitac",where:["manhanvien","=",_context.user.username]},function(nv){
 			if(nv.length){
 				self.makhuvuc=nv[0].makhuvuc;
 				self.madoitac=nv[0].madoitac;
@@ -10,7 +10,7 @@ var Com_HrmsCheckInOut={
 				var nam=now.getFullYear();
 				var thang=now.getMonth()+1;
 				var ngay=now.getDate();
-				NUT_DS.select({url:self.urledit+"chamcong_v",order:"lan",where:[["nam","=",nam],["thang","=",thang],["ngay","=",ngay],["manhanvien","=","%22"+_context.user.username+"%22"]]},function(res){
+				NUT.ds.select({url:self.urledit+"chamcong_v",orderby:"lan",where:[["nam","=",nam],["thang","=",thang],["ngay","=",ngay],["manhanvien","=","%22"+_context.user.username+"%22"]]},function(res){
 					self.lookupData={};
 					var html='<table style="margin:auto">';
 					if(res.length){
@@ -29,15 +29,15 @@ var Com_HrmsCheckInOut={
 									if(data.thoigiansanluong){
 										data.thoigiansanluong=new Date(data["thoigiansanluong"]).toLocaleTimeString();
 										html+='<td><div id="divInOut_SL'+lan+'" class="nut-tile" style="background:brown" onclick="Com_HrmsCheckInOut.divInOut_InfoSL(this,'+id+')"><img src="client/2/img/factory.ico"><br/><b>'+(data.bold+data.boldl+data.light+data.lightl+data.trucbach+data.trucbachl+data.hanoipre+data.hanoiprel)+'<br/>'+data.thoigiansanluong+'</b></div></td>';
-									}else html+='<td><div id="divInOut_SL'+lan+'" class="nut-tile" style="background:white;border:1px solid;color:brown" onclick="Com_HrmsCheckInOut.divInOutSL_onClick(this,'+id+')"><img src="client/2/img/factory.ico"><br/><b>Check SANLUONG</b></div></td>';
-									if(res.length==1)html+='<tr><td><h2 class="nut-link">Lần 2</h2></td></tr><tr><td><div id="divInOut_IN2" class="nut-tile" style="background:white;border:1px solid;color:green" onclick="Com_HrmsCheckInOut.divInOut_onClick(this,2)"><img src="client/2/img/in.ico"><br/><b>Check IN</b></div></td></tr>';
+									}else html+='<td><div id="divInOut_SL'+lan+'" class="nut-tile" style="background:white;borderby:1px solid;color:brown" onclick="Com_HrmsCheckInOut.divInOutSL_onClick(this,'+id+')"><img src="client/2/img/factory.ico"><br/><b>Check SANLUONG</b></div></td>';
+									if(res.length==1)html+='<tr><td><h2 class="nut-link">Lần 2</h2></td></tr><tr><td><div id="divInOut_IN2" class="nut-tile" style="background:white;borderby:1px solid;color:green" onclick="Com_HrmsCheckInOut.divInOut_onClick(this,2)"><img src="client/2/img/in.ico"><br/><b>Check IN</b></div></td></tr>';
 								}else
-									html+='<td><div id="divInOut_OUT'+lan+'" class="nut-tile" style="background:white;border:1px solid;color:orange" onclick="Com_HrmsCheckInOut.doCheckOut(this,'+id+')"><img src="client/2/img/out.ico"><br/><b>Check OUT</b></div></td>';
+									html+='<td><div id="divInOut_OUT'+lan+'" class="nut-tile" style="background:white;borderby:1px solid;color:orange" onclick="Com_HrmsCheckInOut.doCheckOut(this,'+id+')"><img src="client/2/img/out.ico"><br/><b>Check OUT</b></div></td>';
 							}
 							html+="</tr>";
 						}
 					}else{
-						html+='<tr><td><h2 class="nut-link">Lần 1</h2></td></tr><tr><td><div id="divInOut_IN1" class="nut-tile" style="background:white;border:1px solid;color:green" onclick="Com_HrmsCheckInOut.divInOut_onClick(this,1)"><img src="client/2/img/in.ico"><br/><b>Check IN</b></div></td></tr>';
+						html+='<tr><td><h2 class="nut-link">Lần 1</h2></td></tr><tr><td><div id="divInOut_IN1" class="nut-tile" style="background:white;borderby:1px solid;color:green" onclick="Com_HrmsCheckInOut.divInOut_onClick(this,1)"><img src="client/2/img/in.ico"><br/><b>Check IN</b></div></td></tr>';
 					}
 					w2popup.open({
 						title: '🚪 <i>Check IN-OUT</i> - <b>Ngày #<i>'+nam+'-'+thang+'-'+ngay+'</i></b>',
@@ -105,7 +105,7 @@ var Com_HrmsCheckInOut={
 	},
 	cboInOut_MaKhuVuc_onChange:function(val){
 		cboInOut_MaDiemBan.innerHTML=""
-		if(val) NUT_DS.select({url:this.urledit+"diemban",where:["makhuvuc","=",val]},function(res){
+		if(val) NUT.ds.select({url:this.urledit+"diemban",where:["makhuvuc","=",val]},function(res){
 			for(var i=0;i<res.length;i++){
 				var opt=document.createElement("option");
 				opt.value=res[i].madiemban;
@@ -131,7 +131,7 @@ var Com_HrmsCheckInOut={
 				ngay:ngay,
 				lan:lan
 			}
-			NUT_DS.insert({url:this.urledit+"chamcong_v",data:data},function(res){
+			NUT.ds.insert({url:this.urledit+"chamcong_v",data:data},function(res){
 				if(res.length){
 					elm.style.color="white";
 					elm.style.background="green";
@@ -146,7 +146,7 @@ var Com_HrmsCheckInOut={
 	doCheckOut:function(elm,id){
 		var now=new Date();
 		var data={thoigianve:now};
-		NUT_DS.update({url:this.urledit+"chamcong_v",data:data,where:[["idchamcong","=",id]]},function(res){
+		NUT.ds.update({url:this.urledit+"chamcong_v",data:data,where:[["idchamcong","=",id]]},function(res){
 			elm.style.color="white";
 			elm.style.background="orange";
 			elm.setAttribute("onclick","");
@@ -174,7 +174,7 @@ var Com_HrmsCheckInOut={
 			}
 		}
 		
-		NUT_DS.update({url:this.urledit+"chamcong_v",data:data,where:[["idchamcong","=",id]]},function(res){
+		NUT.ds.update({url:this.urledit+"chamcong_v",data:data,where:[["idchamcong","=",id]]},function(res){
 			NUT.tagMsg("Check SANLUONG Done!","lime",elm);
 			elm.style.color="white";
 			elm.style.background="brown";

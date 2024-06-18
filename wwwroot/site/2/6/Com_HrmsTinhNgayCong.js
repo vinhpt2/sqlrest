@@ -12,7 +12,7 @@ var Com_HrmsTinhNgayCong={
 	},
 	runTinhCong:function(){
 		if(numTinhCong_Year.value&&numTinhCong_Month.value){
-			NUT_DS.call({url:_context.service["hrms"].urledit+"rpc/f_tinhngaycong",data:{nam:numTinhCong_Year.value,thang:numTinhCong_Month.value,doitac:'HABECO',dulieu:(chkTinhCong_Edit.checked?1:0)}},function(){
+			NUT.ds.call({url:_context.service["hrms"].urledit+"rpc/f_tinhngaycong",data:{nam:numTinhCong_Year.value,thang:numTinhCong_Month.value,doitac:'HABECO',dulieu:(chkTinhCong_Edit.checked?1:0)}},function(){
 				NUT.tagMsg("Thực hiện thành công!","lime");
 			});
 		} else NUT.tagMsg("Nhập năm, tháng trước khi thực hiện!","yellow");

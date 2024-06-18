@@ -1,39 +1,35 @@
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
-
+﻿<!DOCTYPE HTML>
+<html class="nut-full">
 <head>
-    <title>NUT 2.0</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no" />
 
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+	<title>NUT v2.0</title>
+	<link rel="icon" type="image/png" href="favicon.ico" />
+	<link rel="stylesheet" type="text/css" href="lib/w2ui.min.css">
+	<link rel="stylesheet" type="text/css" href="index.css" />
+    <style>
+        .nut-i-home {
+            content:url('svg/home.svg')
+        }
+        .nut-i-information {
+            content: url('svg/information.svg')
+        }
+        .nut-i-notification {
+            content: url('svg/notification.svg')
+        }
+        .nut-i-switcher {
+            content: url('svg/switcher.svg')
+        }
+	</style>
+	<script src="lib/zipson.min.js"></script>
 
-    <link rel="stylesheet" href="smartui/styles/smart.default.css" />
-    <link rel="stylesheet" href="styles.css" />
-    <script src="lib/zipson.min.js"></script>
-    <script type="module" src="smartui/modules/smart.menu.js"></script>
-    <script type="module" src="smartui/modules/smart.tree.js"></script>
-    <script type="module" src="smartui/modules/smart.tabs.js"></script>
-    <script type="module" src="smartui/modules/smart.grid.js"></script>
-    <script type="module" src="smartui/modules/smart.window.js"></script>
-    <script type="module" src="smartui/modules/smart.form.js"></script>
-    <script type="module" src="smartui/modules/smart.input.js"></script>
-    <script type="module" src="smartui/modules/smart.button.js"></script>
-    <script type="module" src="smartui/modules/smart.buttongroup.js"></script>
-    <script type="module" src="smartui/modules/smart.dropdownlist.js"></script>
-    <script type="module" src="smartui/modules/smart.maskedtextbox.js"></script>
-    <script type="module" src="smartui/modules/smart.validator.js"></script>
-    <script type="module" src="smartui/modules/smart.toast.js"></script>
-    <script type="module" src="index.js"></script>
+
+	<script src="lib/bpmnviewer-8.2.2.min.js"></script>
+	<script src="js/nut.js"></script>
+	<script type="module" src="index.js"></script>
 </head>
-
-<body class="viewport" style="background:url('backdrop.png');background-size:cover">
-    <div id="divMenu"></div>
-    <div id="divLeft" style="position:absolute"></div>
-    <div id="divMain" class="nut-full"></div>
-    <div id="divToast"></div>
-    <div id="divLoading"></div>
+<body class="nut-full" style="background:url('backdrop.png');background-size:cover">
 </body>
 
 </html>

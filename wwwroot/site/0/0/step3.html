@@ -7,7 +7,7 @@
 		.box{
 			width:400px;
 			height:400px;
-			border:1px solid;
+			borderby:1px solid;
 			overflow:auto
 		}
 		.line{
@@ -31,7 +31,7 @@
 var _app=parent.Com_SysApplicationWizard.app;
 var _row=null;
 function body_onLoad(){
-	parent.NUT_DS.select({url:parent.NUT_URL+"sysdomain",where:["applicationid","=",_app.applicationid]},function(res){
+	parent.NUT.ds.select({url:parent.NUT.URL+"sysdomain",where:["appid","=",_app.appid]},function(res){
 		for(var i=0;i<res.length;i++){
 			var row=tblDomain.insertRow();
 			row.className="line";
@@ -57,7 +57,7 @@ function row_onClick(){
 	//}
 }
 function butNewDomain_onClick(){
-	parent.menu_onClick({item:{tag:9},tempWhere:["applicationid","=",_app.applicationid]});
+	parent.menu_onClick({item:{tag:9},tempWhere:["appid","=",_app.appid]});
 }
 function butEditValue_onClick(){
 	//parent.menu_onClick({item:{tag:2}});

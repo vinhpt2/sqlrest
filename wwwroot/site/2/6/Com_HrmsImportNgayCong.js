@@ -51,7 +51,7 @@ var Com_HrmsImportNgayCong={
 						
 					}
 				}
-				NUT_DS.upsert({url:_context.service["hrms"].urledit+"chamcong_v",data:data,keys:"madoitac,manhanvien,madiemban,nam,thang,ngay,dulieu"},function(res){
+				NUT.ds.upsert({url:_context.service["hrms"].urledit+"chamcong_v",data:data,keys:"madoitac,manhanvien,madiemban,nam,thang,ngay,dulieu"},function(res){
 					NUT.tagMsg(res.length + " data imported.","lime");
 				});
 			}

@@ -36,7 +36,7 @@ var Com_HrmsUpdateThongTinNV={
 					if(key==prikey)privalue=value;
 					else json[key]=domain[key]?domain[key][value]:value;
 				}
-				NUT_DS.update({url:this.conf.urledit,where:[prikey,"=",privalue],data:json},function(res){
+				NUT.ds.update({url:this.conf.urledit,where:[prikey,"=",privalue],data:json},function(res){
 					NUT.tagMsg("Record updated.","lime");
 				});
 			}

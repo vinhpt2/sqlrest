@@ -13,10 +13,10 @@ var Com_SysAddMissField={
 	
 	addMissField:function(tab){
 		var self=this;
-		NUT_DS.select({url:NUT_URL+"sysfield",select:"columnid",where:["tabid","=",tab.tabid]},function(res){
+		NUT.ds.select({url:NUT.URL+"sysfield",select:"columnid",where:["tabid","=",tab.tabid]},function(res){
 			var columnids=[];
 			for(var i=0;i<res.length;i++)columnids.push(res[i].columnid);
-			NUT_DS.select({url:NUT_URL+"syscolumn",where:[["tableid","=",tab.tableid],["columnid","!in",columnids]]},function(columns){
+			NUT.ds.select({url:NUT.URL+"syscolumn",where:[["tableid","=",tab.tableid],["columnid","!in",columnids]]},function(columns){
 				if(columns.length){
 					var fields=[];
 					for(var i=0;i<columns.length;i++){
@@ -29,7 +29,7 @@ var Com_SysAddMissField={
 							isdisplaygrid:true,
 							isdisplay:true,
 							issearch:true,
-							orderno:col.orderno,
+							seqno:col.seqno,
 							fieldlength:col.length?col.length:null,
 							isrequire:col.isnotnull,
 							isreadonly:col.isprikey,
@@ -47,7 +47,7 @@ var Com_SysAddMissField={
 		});
 	},
 	insertFields:function(fields){
-		NUT_DS.insert({url:NUT_URL+"sysfield",data:fields},function(res){
+		NUT.ds.insert({url:NUT.URL+"sysfield",data:fields},function(res){
 			w2alert("Tab's missing field added.","ℹ️ Inform");
 		});
 	}

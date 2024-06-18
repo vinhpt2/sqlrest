@@ -13,15 +13,12 @@ export class SqlREST{
 		"<":"<",
 		"<=":"<="
 	}
-	constructor(url,database,schema){
-		this.url=url+"/"+database+"/"+schema+"/data/";
-	}
-	decodeSql(p, notReturnLogic) {
-		var decode = "?select="+(p.select||"*");
+	static decodeSql(p, notReturnLogic) {
+		var decode = p.select?"select="+p.select:"";
 		if(p.where){
 			var i0=(p.where[0]=="and"||p.where[0]=="or"?1:0);
 			var logic=i0?p.where[0]:"and";
-			if(!notReturnLogic)decode+="&where=";
+			if(!notReturnLogic)decode+="where=";
 			var needOpen=(p.where.length>i0+1||notReturnLogic!=0);
 			if(Array.isArray(p.where[i0])){//array-array
 				if(needOpen)decode+="(";
@@ -52,11 +49,11 @@ export class SqlREST{
 		}
 
 		
-		//if(_context.user.clientid&&p.url&&(p.url.includes("/sys")||p.url.includes("/sv_")))decode+=" and clientid="+(p.clientid!=undefined?p.clientid:_context.user.clientid);
-		if(p.order)decode+="&orderby="+p.order;
+		//if(_context.user.clientid&&p.url&&(p.url.includes("/sys")||p.url.includes("/nv_")))decode+=" and clientid="+(p.clientid!=undefined?p.clientid:_context.user.clientid);
+		if(p.orderby)decode+="&orderby="+p.orderby;
 		return decode;
 	}
-	select(p,onok){
+	static select(p,onok){
 		var xhr=new XMLHttpRequest();
 		xhr.onreadystatechange=function(){
 			if(this.readyState==XMLHttpRequest.DONE){
@@ -67,10 +64,10 @@ export class SqlREST{
 			}
 		};
 		xhr.onerror = this.onerror;
-		xhr.open("GET",this.url+p.from+(p.id?"/"+p.id:this.decodeSql(p)),true);
+		xhr.open("GET",p.url+(p.id?"/"+p.id:"?"+this.decodeSql(p)),true);
 		xhr.send();
 	}
-	toCsv(data){
+	static toCsv(data){
 		if(data.length){
 			var keys=Object.keys(data[0]);
 			var csv=keys.toString();
@@ -79,19 +76,19 @@ export class SqlREST{
 				var line=[];
 				for(var j=0;j<keys.length;j++){
 					var value=data[i][keys[j]];
-					(value==null)?line.push("NULL"):line.push(value);
+					line.push(value||"NULL");
 				}
 				csv+="\n"+line;
 			}
 			return csv;
 		}
 	}
-	insert(p,onok){
+	static insert(p,onok){
 		var xhr=new XMLHttpRequest();
 		xhr.onreadystatechange=function(){
 			if(this.readyState==XMLHttpRequest.DONE){
 				if(this.status==0||(this.status>=200&&this.status<400))
-					onok(p.data.length?this.response:JSON.parse(this.response));
+					onok(JSON.parse(this.response));
 				else
 					this.onerror(this.response);
 			}
@@ -101,7 +98,7 @@ export class SqlREST{
 		xhr.setRequestHeader("Content-Type","application/json;charset=UTF-8");
 		xhr.send(JSON.stringify({datas:[p.data]}));
 	}
-	insertCsv(p,onok){
+	static insertCsv(p,onok){
 		var xhr=new XMLHttpRequest();
 		xhr.onreadystatechange=function(){
 			if(this.readyState==XMLHttpRequest.DONE){
@@ -116,27 +113,27 @@ export class SqlREST{
 		xhr.setRequestHeader("Content-Type","text/csv");
 		xhr.send(p.data);
 	}
-	update(p,onok){
+	static update(p,onok){
 		var xhr=new XMLHttpRequest();
 		xhr.onreadystatechange=function(){
 			if(this.readyState==XMLHttpRequest.DONE){
 				if(this.status==0||(this.status>=200&&this.status<400))
-					onok(this.response);
+					onok(JSON.parse(this.response));
 				else
 					this.onerror(this.response);
 			}
 		};
 		xhr.onerror=this.onerror;
-		xhr.open("PATCH",p.url+"?"+this.decodeSql(p),true);
+		xhr.open("PUT",p.url+"?"+this.decodeSql(p),true);
 		xhr.setRequestHeader("Content-Type","application/json;charset=UTF-8");
-		xhr.send(JSON.stringify({datas:[p.data]}));
+		xhr.send(JSON.stringify(p.data));
 	}
-	upsert(p,onok){
+	static upsert(p,onok){
 		var xhr=new XMLHttpRequest();
 		xhr.onreadystatechange=function(){
 			if(this.readyState==XMLHttpRequest.DONE){
 				if(this.status==0||(this.status>=200&&this.status<400))
-					onok(p.data.length?this.response:JSON.parse(this.response));
+					onok(JSON.parse(this.response));
 				else
 					this.onerror(this.response);
 			}
@@ -147,22 +144,21 @@ export class SqlREST{
 		xhr.setRequestHeader("Prefer","return=representation");
 		xhr.send(JSON.stringify(p.data));
 	}
-	delete(p,onok){
+	static delete(p,onok){
 		var xhr=new XMLHttpRequest();
 		xhr.onreadystatechange=function(){
 			if(this.readyState==XMLHttpRequest.DONE){
 				if(this.status==0||(this.status>=200&&this.status<400))
-					onok(this.response);
+					onok(JSON.parse(this.response));
 				else
 					this.onerror(this.response);
 			}
 		};
 		xhr.onerror=this.onerror;
-		xhr.open("DELETE",p.url,true);
-		xhr.setRequestHeader("Content-Type","application/json;charset=UTF-8");
-		xhr.send(JSON.stringify({where:this.decodeSql(p,true)}));
+		xhr.open("DELETE", p.url + "?" + this.decodeSql(p), true);
+		xhr.send();
 	}
-	call(p,onok){
+	static call(p,onok){
 		var xhr=new XMLHttpRequest();
 		xhr.onreadystatechange=function(){
 			if(this.readyState==XMLHttpRequest.DONE){
@@ -178,7 +174,7 @@ export class SqlREST{
 		xhr.setRequestHeader("Content-Type","application/json;charset=UTF-8");
 		xhr.send(JSON.stringify(p.data));
 	}
-	queryMetadata(url,onok){
+	static queryMetadata(url,onok){
 		var xhr=new XMLHttpRequest();
 		xhr.onreadystatechange=function(){
 			if(this.readyState==XMLHttpRequest.DONE){
@@ -192,7 +188,7 @@ export class SqlREST{
 		xhr.open("GET",url,true);
 		xhr.send();
 	}
-	onerror(err){
+	static onerror(err){
 		alert(err);
 	}
 }

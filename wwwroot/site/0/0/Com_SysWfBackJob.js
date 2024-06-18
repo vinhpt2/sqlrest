@@ -3,7 +3,7 @@ var Com_SysWfBackJob={
 		if(p.records.length){
 			this.job=p.records[0];
 			var sentfrom=this.job.sentfrom;
-			NUT_DS.select({url:NUT_URL+"wfjobtype",select:"users",where:["jobtypeid","=",this.job.jobtypeid]},function(res){
+			NUT.ds.select({url:NUT.URL+"wfjobtype",select:"users",where:["jobtypeid","=",this.job.jobtypeid]},function(res){
 				if(res.length){
 					var users=res[0].users.split(",");
 					var str='<select id="cboJob_User" disabled>';
@@ -24,7 +24,7 @@ var Com_SysWfBackJob={
 		}else NUT.tagMsg("No Job selected!","yellow");
 	},
 	updateJob(){
-		NUT_DS.update({url:NUT_URL+"wfjob",where:["jobid","=",this.job.jobid],data:{sentfrom:_context.user.username,assignedto:cboJob_User.value,assignstatusid:null,note:txtJob_Note.value}},function(res){
+		NUT.ds.update({url:NUT.URL+"wfjob",where:["jobid","=",this.job.jobid],data:{sentfrom:_context.user.username,assignedto:cboJob_User.value,assignstatusid:null,note:txtJob_Note.value}},function(res){
 			NUT.tagMsg("Job sent.","lime");
 		});
 	}

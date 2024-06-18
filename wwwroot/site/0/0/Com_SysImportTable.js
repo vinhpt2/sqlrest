@@ -5,7 +5,7 @@ var Com_SysImportTable={
 			var self=this;
 			switch(this.service.servicetype){
 				case "postgrest":
-					NUT_DS.queryMetadata(this.service.urledit,function(metadata){
+					NUT.ds.queryMetadata(this.service.urledit,function(metadata){
 						var definitions=metadata.definitions;
 						if(definitions){
 							for(var key in definitions)if(definitions.hasOwnProperty(key)){
@@ -26,7 +26,7 @@ var Com_SysImportTable={
 									}
 								}
 							}
-							NUT_DS.select({url:NUT_URL+"systable",where:["serviceid","=",self.service.serviceid]},function(res){
+							NUT.ds.select({url:NUT.URL+"systable",where:["serviceid","=",self.service.serviceid]},function(res){
 								var lookup={};
 								for(var i=0;i<res.length;i++)lookup[res[i].tablename]=res[i];
 								self.showDlgImport(definitions,lookup);
@@ -35,7 +35,7 @@ var Com_SysImportTable={
 					});
 					break;
 				case "geoserver":
-					NUT_DS.queryMetadata(self.service.urledit+"/wfs?request=DescribeFeatureType&outputFormat=application/json",function(metadata){
+					NUT.ds.queryMetadata(self.service.urledit+"/wfs?request=DescribeFeatureType&outputFormat=application/json",function(metadata){
 						var featureTypes=metadata.featureTypes;
 						if(featureTypes.length){
 							var definitions={};
@@ -48,7 +48,7 @@ var Com_SysImportTable={
 								}
 								definitions[featType.typeName]=definition;
 							}
-							NUT_DS.select({url:NUT_URL+"systable",where:["serviceid","=",self.service.serviceid]},function(res){
+							NUT.ds.select({url:NUT.URL+"systable",where:["serviceid","=",self.service.serviceid]},function(res){
 								var lookup={};
 								for(var i=0;i<res.length;i++)lookup[res[i].tablename]=res[i];
 								self.showDlgImport(definitions,lookup);
@@ -106,7 +106,7 @@ var Com_SysImportTable={
 	},
 	addMissColumn:function(table,definition){
 		var self=this;
-		NUT_DS.select({url:NUT_URL+"syscolumn",select:"columnname",where:["tableid","=",table.tableid]},function(res){
+		NUT.ds.select({url:NUT.URL+"syscolumn",select:"columnname",where:["tableid","=",table.tableid]},function(res){
 			var lookup={};
 			for(var i=0;i<res.length;i++)lookup[res[i].columnname]=true;
 			var columns=[];
@@ -117,7 +117,7 @@ var Com_SysImportTable={
 					tableid:table.tableid,
 					columnname:key,
 					alias:prop.description?prop.description:key,
-					orderno:++order,
+					seqno:++order,
 					columntype:prop.format,
 					clientid:_context.user.clientid,
 					isprikey:prop.isprikey,
@@ -139,7 +139,7 @@ var Com_SysImportTable={
 			var col={
 				columnname:key,
 				alias:prop.description?prop.description:key,
-				orderno:++order,
+				seqno:++order,
 				columntype:prop.format,
 				clientid:_context.user.clientid,
 				isprikey:prop.isprikey,
@@ -160,7 +160,7 @@ var Com_SysImportTable={
 			clientid:_context.user.clientid
 		};
 		var self=this;
-		NUT_DS.insert({url:NUT_URL+"systable",data:table},function(res){
+		NUT.ds.insert({url:NUT.URL+"systable",data:table},function(res){
 			if(res.length){
 				for(var i=0;i<columns.length;i++)columns[i].tableid=res[0].tableid;
 				self.insertColumns(columns);
@@ -169,7 +169,7 @@ var Com_SysImportTable={
 		});
 	},
 	insertColumns:function(columns){
-		NUT_DS.insert({url:NUT_URL+"syscolumn",data:columns},function(res){
+		NUT.ds.insert({url:NUT.URL+"syscolumn",data:columns},function(res){
 			if(res.length)NUT.tagMsg("Record inserted.","lime");
 		});
 	}

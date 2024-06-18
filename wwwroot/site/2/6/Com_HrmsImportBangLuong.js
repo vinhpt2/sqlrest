@@ -14,7 +14,7 @@ var Com_HrmsImportBangLuong={
 		});
 	},
 	insert:function(csv){
-		NUT_DS.insertCsv({url:this.conf.urledit,data:csv.replaceAll('\t',',')},function(res){
+		NUT.ds.insertCsv({url:this.conf.urledit,data:csv.replaceAll('\t',',')},function(res){
 			if(res.length)NUT.tagMsg("Data imported.","lime");
 		});
 	}

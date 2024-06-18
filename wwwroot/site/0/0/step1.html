@@ -7,7 +7,7 @@
 		.box{
 			width:400px;
 			height:400px;
-			border:1px solid;
+			borderby:1px solid;
 			overflow:auto
 		}
 		.line{
@@ -31,7 +31,7 @@
 var _app=parent.Com_SysApplicationWizard.app;
 var _row=null;
 function body_onLoad(){
-	parent.NUT_DS.select({url:parent.NUT_URL+"sysservice",where:["clientid","=",_app.clientid]},function(res){
+	parent.NUT.ds.select({url:parent.NUT.URL+"sysservice",where:["clientid","=",_app.clientid]},function(res){
 		for(var i=0;i<res.length;i++){
 			var row=tblService.insertRow();
 			row.className="line";
@@ -48,7 +48,7 @@ function row_onClick(){
 			tblService.rows[i].style.backgroundColor="";
 		this.style.backgroundColor="#B6D5FF";
 		_row=this;
-		parent.NUT_DS.select({url:parent.NUT_URL+"systable",where:["serviceid","=",this.tag.serviceid]},function(res){
+		parent.NUT.ds.select({url:parent.NUT.URL+"systable",where:["serviceid","=",this.tag.serviceid]},function(res){
 			tblTable.innerHTML="";
 			for(var i=0;i<res.length;i++){
 				var row=tblTable.insertRow();

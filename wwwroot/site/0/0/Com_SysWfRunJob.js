@@ -9,7 +9,7 @@ var Com_SysWfRunJob={
 			var wfconf=_context.workflow[this.job.jobtypeid];
 			if(wfconf)
 				this.showWorkflow(wfconf);
-			else NUT_DS.select({url:NUT_URL+"wfjobtype",select:"jobtypedata,users",clientid:_context.curApp.clientid,where:["jobtypeid","=",this.job.jobtypeid]},function(res){
+			else NUT.ds.select({url:NUT.URL+"wfjobtype",select:"jobtypedata,users",clientid:_context.curApp.clientid,where:["jobtypeid","=",this.job.jobtypeid]},function(res){
 				if(res.length){
 					self.users=res[0].users;
 					wfconf=res[0].jobtypedata;
@@ -27,7 +27,7 @@ var Com_SysWfRunJob={
 			conf.tabs[0].tempWhere=[conf.tabs[0].columnkey,"=",this.job.recordid];
 			this.showDlgWorkflow(wfconf,conf);
 		}else{
-			NUT_DS.select({url:NUT_URL+"syscache",clientid:_context.curApp.clientid,where:["windowid","=",this.job.windowid]},function(res){
+			NUT.ds.select({url:NUT.URL+"syscache",clientid:_context.curApp.clientid,where:["windowid","=",this.job.windowid]},function(res){
 				if(res.length){
 					conf=NUT.configWindow(zipson.parse(res[0].config),JSON.parse(res[0].layout));
 					conf.tabid=conf.windowid;
@@ -127,7 +127,7 @@ var Com_SysWfRunJob={
 						data[key]=(change[key]===""?null:change[key]);
 					var recid=form.record[columnkey];
 					var p={url:conf.urledit,where:[columnkey,"=",recid],data:data};
-					NUT_DS.update(p,function(res){
+					NUT.ds.update(p,function(res){
 						NUT.tagMsg("Record updated.","lime",tagNode);
 					});
 					form.applyChanges();
@@ -165,13 +165,13 @@ var Com_SysWfRunJob={
 		var data=isFinish?{assignstatusid:null,sentfrom:job.assignedto,assignedto:job.assignedto,jobstatusid:2}:
 			{assignstatusid:null,sentfrom:job.assignedto,assignedto:cboJob_ToUser.value,currentstep:cboJob_NextStep.value,note:txtJob_Note.value};
 		
-		NUT_DS.update({url:NUT_URL+"wfjob",where:["jobid","=",job.jobid],data:data},function(){
+		NUT.ds.update({url:NUT.URL+"wfjob",where:["jobid","=",job.jobid],data:data},function(){
 			var data=isFinish?{assignedto:job.assignedto,stepid:job.currentstep}:{description:txtJob_Note.value,assignedto:cboJob_ToUser.value,stepid:cboJob_NextStep.value};
 			data.updatetime=new Date();
 			data.clientid=_context.user.clientid;
 			data.sentfrom=job.assignedto;
 			data.jobid=job.jobid;			
-			NUT_DS.insert({url:NUT_URL+"wfhistory",data:data});
+			NUT.ds.insert({url:NUT.URL+"wfhistory",data:data});
 			
 			NUT.tagMsg("Step done.","lime");
 			w2popup.close();

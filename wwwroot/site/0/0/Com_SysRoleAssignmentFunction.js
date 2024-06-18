@@ -4,10 +4,10 @@ var Com_SysRoleAssignmentFunction={
 			this.app=p.parent;
 			this.role=p.records[0];
 			var self=this;
-			NUT_DS.select({url:NUT_URL+"sysrolefunction",select:"rolefunctionid,functionid",where:["roleid","=",self.role.roleid]},function(res){
+			NUT.ds.select({url:NUT.URL+"sysrolefunction",select:"rolefunctionid,functionid",where:["roleid","=",self.role.roleid]},function(res){
 				var existUsers={};
 				for(var i=0;i<res.length;i++)existUsers[res[i].userid]=res[i].accessid;
-				NUT_DS.select({url:NUT_URL+"sysuser",where:["clientid","=",_context.user.clientid]},function(users){
+				NUT.ds.select({url:NUT.URL+"sysuser",where:["clientid","=",_context.user.clientid]},function(users){
 					if(users.length)self.showDlgRoleAssignmentUser(users,existUsers);
 				});
 			});
@@ -52,16 +52,16 @@ var Com_SysRoleAssignmentFunction={
 	assignUser:function(userid,isAssign,accessid){
 		if(isAssign){
 			var data={
-				applicationid:this.app.applicationid,
+				appid:this.app.appid,
 				roleid:this.role.roleid,
 				userid:userid,
 				clientid:_context.user.clientid
 			};
-			NUT_DS.insert({url:NUT_URL+"sysaccess",data:data},function(res){
+			NUT.ds.insert({url:NUT.URL+"sysaccess",data:data},function(res){
 				if(res.length)NUT.tagMsg("Record inserted.","lime");
 			});
 		}else{
-			NUT_DS.delete({url:NUT_URL+"sysaccess",where:["accessid","=",accessid]},function(res){
+			NUT.ds.delete({url:NUT.URL+"sysaccess",where:["accessid","=",accessid]},function(res){
 				NUT.tagMsg("1 record deleted.","lime");
 			});
 		}

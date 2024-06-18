@@ -57,7 +57,7 @@ var Com_HrmsImportSanLuong={
 					if(oldNgay!=null)data.push(json);
 				}
 				var keys="madoitac,manhanvien,madiemban,nam,thang,dulieu,"+(chkTinhCong_SanLuongTuan.checked?"tuan":"ngay");
-				NUT_DS.upsert({url:_context.service["hrms"].urledit+"chamcong_v",data:data,keys:keys},function(res){
+				NUT.ds.upsert({url:_context.service["hrms"].urledit+"chamcong_v",data:data,keys:keys},function(res){
 					NUT.tagMsg(res.length + " data imported.","lime");
 				});
 			}

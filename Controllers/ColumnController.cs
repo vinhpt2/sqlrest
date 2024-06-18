@@ -43,17 +43,17 @@ namespace SQLRestC.Controllers
                                 description = obj.ExtendedProperties.Contains(Global.MS_DESCRIPTION) ? (String)obj.ExtendedProperties[Global.MS_DESCRIPTION].Value : null
                             });
                         }
-                        response.results = jsonArr;
+                        response.result = jsonArr;
                     }
-                    else response.results = "Table '" + database + "." + schema+"."+table + "' not found!";
+                    else response.result = "Table '" + database + "." + schema+"."+table + "' not found!";
                 }
-                else response.results = "Database '" + database + "' not found!";
+                else response.result = "Database '" + database + "' not found!";
                 return response;
 
             }
             catch (Exception ex)
             {
-                return new ResponseJson { success = false, results = ex.Message };
+                return new ResponseJson { success = false, result = ex.Message };
             }
             finally
             {
@@ -82,7 +82,7 @@ namespace SQLRestC.Controllers
                         response.success = (obj != null);
                         if (response.success)
                         {
-                            response.results = new ColumnJson
+                            response.result = new ColumnJson
                             {
                                 id = obj.ID,
                                 name = obj.Name,
@@ -96,16 +96,16 @@ namespace SQLRestC.Controllers
                                 description = obj.ExtendedProperties.Contains(Global.MS_DESCRIPTION) ? (String)obj.ExtendedProperties[Global.MS_DESCRIPTION].Value : null
                             };
                         }
-                        else response.results = "Column '" + database + "." + schema + "."+table + "." + name + "' not found!";
+                        else response.result = "Column '" + database + "." + schema + "."+table + "." + name + "' not found!";
                     }
-                    else response.results = "Table '" + database + "." + schema + "." + table + "' not found!";
+                    else response.result = "Table '" + database + "." + schema + "." + table + "' not found!";
                 }
-                else response.results = "Database '" + database + "' not found!";
+                else response.result = "Database '" + database + "' not found!";
                 return response;
             }
             catch (Exception ex)
             {
-                return new ResponseJson { success = false, results = ex.Message };
+                return new ResponseJson { success = false, result = ex.Message };
             }
             finally
             {
@@ -151,16 +151,16 @@ namespace SQLRestC.Controllers
                         }
                         tb.Alter();
 
-                        response.results = nameArr;
+                        response.result = nameArr;
                     }
-                    else response.results = "Table '" + database + "." + schema + "." + table + "' not found!";
+                    else response.result = "Table '" + database + "." + schema + "." + table + "' not found!";
                 }
-                else response.results = "Database '" + database + "' not found!";
+                else response.result = "Database '" + database + "' not found!";
                 return response;
             }
             catch (Exception ex)
             {
-                return new ResponseJson { success = false, results = ex.Message };
+                return new ResponseJson { success = false, result = ex.Message };
             }
             finally
             {
@@ -191,16 +191,16 @@ namespace SQLRestC.Controllers
                             Global.makeColumn(column, obj);
                             obj.Alter();
                         }
-                        else response.results = "Column '" + database + "." + schema + "."+table+"." + name + "' not found!";
+                        else response.result = "Column '" + database + "." + schema + "."+table+"." + name + "' not found!";
                     }
-                    else response.results = "Table '" + database + "." + schema + "." + table + "' not found!";
+                    else response.result = "Table '" + database + "." + schema + "." + table + "' not found!";
                 }
-                else response.results = "Database '" + database + "' not found!";
+                else response.result = "Database '" + database + "' not found!";
                 return response;
             }
             catch (Exception ex)
             {
-                return new ResponseJson { success = false, results = ex.Message };
+                return new ResponseJson { success = false, result = ex.Message };
             }
             finally
             {
@@ -230,16 +230,16 @@ namespace SQLRestC.Controllers
                         {
                             obj.Drop();
                         }
-                        else response.results = "Column '" + database + "." + schema + "."+table+"." + name + "' not found!";
+                        else response.result = "Column '" + database + "." + schema + "."+table+"." + name + "' not found!";
                     }
-                    else response.results = "Table '" + database + "." + schema + "." + name + "' not found!";
+                    else response.result = "Table '" + database + "." + schema + "." + name + "' not found!";
                 }
-                else response.results = "Database '" + database + "' not found!";
+                else response.result = "Database '" + database + "' not found!";
                 return response;
             }
             catch (Exception ex)
             {
-                return new ResponseJson { success = false, results = ex.Message };
+                return new ResponseJson { success = false, result = ex.Message };
             }
             finally
             {

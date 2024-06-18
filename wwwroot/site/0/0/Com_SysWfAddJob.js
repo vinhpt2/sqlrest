@@ -3,7 +3,7 @@ var Com_SysWfAddJob={
 		if(p.records.length){
 			var record=p.records[0];
 			var conf=p.config;
-			NUT_DS.select({url:NUT_URL+"wfjobtype",select:"jobtypeid,numdaycomplete,jobstepstart,assignedto,timeunit",where:["tableid","=",conf.tableid]},function(res){
+			NUT.ds.select({url:NUT.URL+"wfjobtype",select:"jobtypeid,numdaycomplete,jobstepstart,assignedto,timeunit",where:["tableid","=",conf.tableid]},function(res){
 				if(res.length){
 					var wf=res[0];
 					var now=new Date();
@@ -25,7 +25,7 @@ var Com_SysWfAddJob={
 						currentstep:record[jobstepstart]
 					}
 					if(data.assignedto!=data.ownedby)data.sentfrom=data.ownedby;
-					NUT_DS.insert({url:NUT_URL+"wfjob",data:data},function(res){
+					NUT.ds.insert({url:NUT.URL+"wfjob",data:data},function(res){
 						if(res.length)NUT.tagMsg("Records inserted.","lime");
 					});
 				}else NUT.tagMsg("No workflow found!","yellow");

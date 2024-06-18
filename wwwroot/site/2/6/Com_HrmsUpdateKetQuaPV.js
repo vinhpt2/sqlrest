@@ -34,7 +34,7 @@ var Com_HrmsUpdateKetQuaPV={
 					var key=header[j];
 					json[key]=domain[key]?domain[key][values[j]]:values[j];
 				}
-				NUT_DS.update({url:this.conf.urledit,where:[prikey,"=",json[prikey]],data:json},function(res){
+				NUT.ds.update({url:this.conf.urledit,where:[prikey,"=",json[prikey]],data:json},function(res){
 					NUT.tagMsg("Record updated.","lime");
 				});
 			}

@@ -10,9 +10,9 @@ $().w2field("addType","search",function(options){
 	this.buttonSearch.onclick=function(evt){
 		var fldconf=self.options.conf;
 		_context.ctrlSearch=self;
-		NUT_DS.select({url:NUT_URL+"sv_window_tab",where:[["windowtype","=","search"],["tableid","=",fldconf.foreigntableid]]},function(res){
+		NUT.ds.select({url:NUT.URL+"nv_window_tab",where:[["windowtype","=","search"],["tableid","=",fldconf.foreigntableid]]},function(res){
 			if(res.length){
-				NUT_DS.select({url:NUT_URL+"syscache",where:["windowid","=",res[0].windowid]},function(caches){
+				NUT.ds.select({url:NUT.URL+"syscache",where:["windowid","=",res[0].windowid]},function(caches){
 					if(caches.length){
 						conf=NUT.configWindow(JSON.parse(caches[0].config));
 						conf.tabid=conf.windowid;
@@ -48,7 +48,7 @@ $().w2field("addType","search",function(options){
 		else{
 			p.where=["or",[fldconf.columncode,"like",value],[fldconf.columnkey,"=",value]];
 		}
-		if(fldconf.fieldtype=="search")NUT_DS.select(p,function(res){
+		if(fldconf.fieldtype=="search")NUT.ds.select(p,function(res){
 			if(res.length){	
 				if(res.length==1){
 					_context.ctrlSearch.el.value=res[0][fldconf.columnkey];

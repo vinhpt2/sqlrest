@@ -4,9 +4,9 @@ var Com_SysBuildTab={
 		if(p.records.length){
 			this.window=p.records[0];
 			var self=this;
-			NUT_DS.select({url:NUT_URL+"sv_appservice_table",where:["applicationid","=",this.window.applicationid]},function(tables){
+			NUT.ds.select({url:NUT.URL+"nv_appservice_table",where:["appid","=",this.window.appid]},function(tables){
 				if(tables.length)
-					NUT_DS.select({url:NUT_URL+"systab",where:["windowid","=",self.window.windowid]},function(res){
+					NUT.ds.select({url:NUT.URL+"systab",where:["windowid","=",self.window.windowid]},function(res){
 						var existTabs={};
 						for(var i=0;i<res.length;i++) existTabs[res[i].tabid]=res[i];
 						self.showDlgBuild(tables, existTabs)
@@ -96,10 +96,10 @@ var Com_SysBuildTab={
 	},
 	addMissField:function(tab){
 		var self=this;
-		NUT_DS.select({url:NUT_URL+"sysfield",select:"columnid",where:["tabid","=",tab.tabid]},function(res){
+		NUT.ds.select({url:NUT.URL+"sysfield",select:"columnid",where:["tabid","=",tab.tabid]},function(res){
 			var columnids=[];
 			for(var i=0;i<res.length;i++)columnids.push(res[i].columnid);
-			NUT_DS.select({url:NUT_URL+"syscolumn",where:[["tableid","=",tab.tableid],["columnid","!in",columnids]]},function(columns){
+			NUT.ds.select({url:NUT.URL+"syscolumn",where:[["tableid","=",tab.tableid],["columnid","!in",columnids]]},function(columns){
 				if(columns.length){
 					var fields=[];
 					for(var i=0;i<columns.length;i++){
@@ -112,7 +112,7 @@ var Com_SysBuildTab={
 							isdisplaygrid:true,
 							isdisplay:true,
 							issearch:true,
-							orderno:col.orderno,
+							seqno:col.seqno,
 							fieldlength:col.length?col.length:null,
 							isrequire:col.isnotnull,
 							isreadonly:col.isprikey,
@@ -129,12 +129,12 @@ var Com_SysBuildTab={
 			});
 		});
 	},
-	insertTab:function(table,orderno,parenttab,callback){
+	insertTab:function(table,seqno,parenttab,callback){
 		var tab={
 			parenttabid:parenttab?parenttab.tabid:null,
 			tabname:table.tablename,
 			tablevel:parenttab?1:0,
-			orderno:orderno,
+			seqno:seqno,
 			description:table.description,
 			truonglienketcon:null,
 			truonglienketcha:null,
@@ -144,12 +144,12 @@ var Com_SysBuildTab={
 			clientid:_context.user.clientid
 		};
 		var self=this;
-		NUT_DS.select({url:NUT_URL+"syscolumn",order:"columnid",where:["tableid","=",table.tableid]},function(columns){
+		NUT.ds.select({url:NUT.URL+"syscolumn",orderby:"columnid",where:["tableid","=",table.tableid]},function(columns){
 			if(columns.length){
 				var fields=[];
 				for(var i=0;i<columns.length;i++){
 					var col=columns[i];
-					if(col.columnname=="orderno")tab.orderbyclause="orderno";
+					if(col.columnname=="seqno")tab.orderbyclause="seqno";
 					if(parenttab&&!col.isfromdomain){
 						if(parenttab.tableid==col.foreigntableid){
 							tab.truonglienketcon=tab.truonglienketcha=col.columnname;
@@ -163,7 +163,7 @@ var Com_SysBuildTab={
 						isdisplaygrid:true,
 						isdisplay:true,
 						issearch:true,
-						orderno:col.orderno,
+						seqno:col.seqno,
 						fieldlength:col.length?col.length:null,
 						isrequire:col.isnotnull,
 						isreadonly:col.isprikey,
@@ -175,7 +175,7 @@ var Com_SysBuildTab={
 					else fld.fieldtype=col.columntype;
 					fields.push(fld);
 				}
-				NUT_DS.insert({url:NUT_URL+"systab",data:tab},function(res){
+				NUT.ds.insert({url:NUT.URL+"systab",data:tab},function(res){
 					if(res.length){
 						if(callback)callback(res[0]);
 						for(var i=0;i<fields.length;i++)fields[i].tabid=res[0].tabid;
@@ -187,7 +187,7 @@ var Com_SysBuildTab={
 		})
 	},
 	insertFields:function(fields){
-		NUT_DS.insert({url:NUT_URL+"sysfield",data:fields},function(res){
+		NUT.ds.insert({url:NUT.URL+"sysfield",data:fields},function(res){
 			if(res.length)NUT.tagMsg("Records inserted.","lime");
 		});
 	}

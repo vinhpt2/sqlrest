@@ -33,11 +33,11 @@ namespace SQLRestC.Controllers
                         });
                     }
                 }
-                return new ResponseJson { success = true, results = jsonArr };
+                return new ResponseJson { success = true, result = jsonArr };
                 
             } catch (Exception ex)
             {
-                return new ResponseJson { success = false, results = ex.Message };
+                return new ResponseJson { success = false, result = ex.Message };
             }
             finally
             {
@@ -58,7 +58,7 @@ namespace SQLRestC.Controllers
                 var response = new ResponseJson { success= (obj != null) };
                 if (response.success)
                 {
-                    response.results = new DatabaseJson
+                    response.result = new DatabaseJson
                     {
                         id = obj.ID,
                         name = obj.Name,
@@ -67,12 +67,12 @@ namespace SQLRestC.Controllers
                         indexUsage = obj.IndexSpaceUsage
                     };
                 }
-                else response.results = "Database '" + name + "' not found!";
+                else response.result = "Database '" + name + "' not found!";
                 return response;
             }
             catch (Exception ex)
             {
-                return new ResponseJson { success = false, results = ex.Message };
+                return new ResponseJson { success = false, result = ex.Message };
             }
             finally
             {
@@ -94,13 +94,13 @@ namespace SQLRestC.Controllers
                 {
                     var obj = new Database(server, name);
                     obj.Create();
-                    response.results = obj.Name;
-                } else response.results= "Database '" + name + "' already exists!";
+                    response.result = obj.Name;
+                } else response.result= "Database '" + name + "' already exists!";
                 return response;
             }
             catch (Exception ex)
             {
-                return new ResponseJson { success = false, results = ex.Message };
+                return new ResponseJson { success = false, result = ex.Message };
             }
             finally
             {
@@ -122,12 +122,12 @@ namespace SQLRestC.Controllers
                 {
                     obj.Rename(newName);
                 }
-                else response.results = "Database '" + name + "' not exists!";
+                else response.result = "Database '" + name + "' not exists!";
                 return response;
             }
             catch (Exception ex)
             {
-                return new ResponseJson { success = false, results = ex.Message };
+                return new ResponseJson { success = false, result = ex.Message };
             }
             finally
             {
@@ -149,12 +149,12 @@ namespace SQLRestC.Controllers
                 {
                     obj.Drop();
                 }
-                else response.results = "Database '" + name + "' not exists!";
+                else response.result = "Database '" + name + "' not exists!";
                 return response;
             }
             catch (Exception ex)
             {
-                return new ResponseJson { success = false, results = ex.Message };
+                return new ResponseJson { success = false, result = ex.Message };
             }
             finally
             {

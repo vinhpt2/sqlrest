@@ -2,7 +2,7 @@ var Com_SysWfManager={
 	run:function(div){
 		this.div=div;
 		var self=this;
-		NUT_DS.select({url:NUT_URL+"wfjobtype",where:["applicationid","=",_context.curApp.applicationid]},function(res){
+		NUT.ds.select({url:NUT.URL+"wfjobtype",where:["appid","=",_context.curApp.appid]},function(res){
 			var str='<select id="cboJobM_Jobtype" onchange="Com_SysWfManager.cboJobtype_onChange(this.value)">';
 			for(var i=0;i<res.length;i++)
 				str+='<option value="'+res[i].jobtypeid+'">'+res[i].jobtypename+'</option>';
@@ -22,7 +22,7 @@ var Com_SysWfManager={
 	},
 	cboJobtype_onChange:function(val){
 		if(val){
-			NUT_DS.select({url:NUT_URL+"wfjob",where:["jobtypeid","=",val]},function(res){
+			NUT.ds.select({url:NUT.URL+"wfjob",where:["jobtypeid","=",val]},function(res){
 				if(res.length){
 					divJobM_Main.innerHTML="";
 					for(var i=0;i<res.length;i++){
@@ -34,14 +34,14 @@ var Com_SysWfManager={
 						bar.tag=job;
 						bar.onclick=function(){
 							var self=this;
-							NUT_DS.select({url:NUT_URL+"sv_tab_table",where:["tablename","=","wfjob"]},function(res){
+							NUT.ds.select({url:NUT.URL+"nv_tab_table",where:["tablename","=","wfjob"]},function(res){
 								if(res.length){
 									var tag=res[0].windowid;
 									var conf=_context.winconfig[tag];
 									if(conf){
 										runComponent("Com_SysWfRunJob",{records:[this.tag],config:conf.tabs[0],readonly:true});
 									}else{
-										NUT_DS.select({url:NUT_URL+"syscache",where:["windowid","=",tag]},function(res){
+										NUT.ds.select({url:NUT.URL+"syscache",where:["windowid","=",tag]},function(res){
 											if(res.length){
 												conf=NUT.configWindow(zipson.parse(res[0].config),JSON.parse(res[0].layout));
 												_context.winconfig[tag]=conf;
@@ -74,7 +74,7 @@ var Com_SysWfManager={
 									detail=tbl.createTBody();
 									this.div=tbl;
 								}
-								NUT_DS.select({url:NUT_URL+"wfhistory",where:["jobid","=",this.tag.jobid]},function(res){
+								NUT.ds.select({url:NUT.URL+"wfhistory",where:["jobid","=",this.tag.jobid]},function(res){
 									for(var i=0;i<res.length;i++){
 										var rec=res[i];
 										var row=detail.insertRow();

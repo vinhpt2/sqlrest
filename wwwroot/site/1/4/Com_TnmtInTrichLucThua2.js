@@ -1,7 +1,7 @@
 var Com_TnmtInTrichLucThua2={
 	run:function(p){
 		if(p.records.length){
-			NUT_DS.select({url:p.config.urledit.replace("/thuadat", "/v_thongtinthuadat"),where:["thuadatid","=",p.records[0].thuadatid]},function(res){
+			NUT.ds.select({url:p.config.urledit.replace("/thuadat", "/v_thongtinthuadat"),where:["thuadatid","=",p.records[0].thuadatid]},function(res){
 				if(res.length){
 					var thua=res[0];
 					var img=p.gsmap.awBasic.urlExportImage("dc_thuadat","mahuyen="+thua.mahuyen+" and maxa="+thua.maxa+" and sohieutobando="+thua.sohieutobando+" and sothututhua="+thua.sothututhua);			
