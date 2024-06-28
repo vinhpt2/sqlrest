@@ -36,8 +36,8 @@ var Com_SysApplyWindowCache = {
 						var key=NUT.ERD.tab[j];
 						if(key=="linktable"||key=="midtable"){
 							table=lookupTable[tabs[i][key+"id"]];
-							self.cache.tabs[i].push(table?table.urledit:null);
-						}else if(table&&key=="midtable_columnkey")
+							self.cache.tabs[i].push(table?table.viewname||table.tablename:null);
+						} else if (table && key =="midtable_prikey")
 							self.cache.tabs[i].push(table["columnkey"]);
 						else self.cache.tabs[i].push(tabs[i].hasOwnProperty(key)?tabs[i][key]:lookupTable[tabs[i].tableid][key]);
 					}

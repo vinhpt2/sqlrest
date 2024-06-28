@@ -1,22 +1,22 @@
-import { w2ui, w2grid, w2toolbar, w2form, w2tabs, w2alert, w2popup } from "../nut2/lib/w2ui.es6.min.js";
+import { w2ui, w2grid, w2toolbar, w2form, w2tabs, w2alert, w2popup, w2menu } from "../lib/w2ui.es6.min.js";
 export class NWin {
 	constructor(id) {
 		this.id = id;
 	}
 	buildWindow(div,conf,tabLevel,callback){
 		var divTabs=document.createElement("div");
-		divTabs.id="divtabs_"+conf.tabid+"_"+tabLevel;
+		divTabs.id="tabs_"+conf.tabid+"_"+tabLevel;
 		div.appendChild(divTabs);
 		var tabs=[];
 		for(var i=0;i<conf.tabs.length;i++){
 			var tabconf=conf.tabs[i];
 			//isMobile screen
-			if(window.orientation!==undefined)tabconf.layoutcols=1;
+			if(NUT.isMobile)tabconf.layoutcols=1;
 			else if(!tabconf.layoutcols)tabconf.layoutcols=NUT.LAYOUT_COLS;
 			
 			if(tabconf.tablevel==tabLevel){
 				var divTab=document.createElement("div");
-				divTab.id="divtab_"+tabconf.tabid;
+				divTab.id="tab_"+tabconf.tabid;
 				divTab.style.height=(tabconf.maxLevel?"50%":"100%");
 				div.appendChild(divTab);
 				var tab={id:tabconf.tabid,text:tabconf.tabname,tag:tabconf,callback:callback};
@@ -45,7 +45,7 @@ export class NWin {
 					domain.items.push(item);
 					domain.lookup[item.id] = item.text;
 				}
-				NUT.ctx.domain[fldconf.foreigntable_url] = domain;
+				NUT.domains[fldconf.foreigntable_url] = domain;
 				if (++index < needCaches.length) cacheDomainAndOpenWindow(conf, needCaches, index);
 				else buildWindow(div, conf, 0);
 			} else NUT.notify("⛔ ERROR: " + res.result, "red");
@@ -56,12 +56,12 @@ export class NWin {
 		var id=evt.detail.tab.id;
 		for(var i=0;i<this.tabs.length;i++){
 			var tab=this.tabs[i];
-			var divTab=document.getElementById("divtab_"+tab.id);
+			var divTab=document.getElementById("tab_"+tab.id);
 			divTab.style.display=(tab.id==id)?"":"none";
 			if(tab.id==id)NWin.updateChildGrids(tab.tag);
 		}
-		w2ui["divgrid_"+id].resize();
-		w2ui["divform_"+id].resize();
+		//w2ui["grid_"+id].resize();
+		//w2ui["form_"+id].resize();
 	}
 	buildContent(div,tab){
 		var conf=tab.tag;
@@ -71,16 +71,16 @@ export class NWin {
 		for(var i=0;i<conf.fields.length;i++){
 			var fldconf=conf.fields[i];
 			if(!fldconf.isprimarykey){
-				if(fldconf.fieldname=="clientid")conf.default.clientid=NUT.ctx.user.clientid;
-				if(fldconf.fieldname=="appid")conf.default.appid=NUT.ctx.curApp.appid;
+				if(fldconf.fieldname=="clientid")conf.default.clientid=c$.user.clientid;
+				if(fldconf.fieldname=="appid")conf.default.appid=c$.app.appid;
 			}		
 			var domain=null;
 			if(fldconf.fieldtype=="select"){
 				var key=fldconf.domainid||fldconf.foreigntable_url;
-				domain=NUT.ctx.domain[key];
+				domain=NUT.domains[key];
 			}
 			if(fldconf.isdisplaygrid){
-				var column={field:fldconf.fieldname,text:fldconf.alias,size:"100px", sortable:true,frozen:(fldconf.fieldname==conf.columncode),options:{conf:fldconf}};
+				var column={field:fldconf.fieldname,text:fldconf.alias,size:"100px", sortable:true,frozen:fldconf.isfrozen,options:{conf:fldconf}};
 				if(fldconf.fieldtype=="int"||fldconf.fieldtype=="number"||fldconf.fieldtype=="currency"||fldconf.fieldtype=="date"||fldconf.fieldtype=="datetime"||fldconf.fieldtype=="percent")column.render=fldconf.fieldtype;
 				if(fldconf.foreigNWindowid){
 					column.render=function(record,index,column_index){					
@@ -89,7 +89,7 @@ export class NWin {
 					}
 				}
 				if(!fldconf.isreadonly){
-					column.editable={type:fldconf.fieldtype};
+					column.editable = { type: fldconf.fieldtype };
 					if(domain)column.editable.items=domain.items;
 					if(domain&&fldconf.parentfieldid){
 						column.editable.lookup=domain.lookup;
@@ -104,7 +104,7 @@ export class NWin {
 			}
 
 			if(fldconf.isdisplay){
-				var field={field: fldconf.fieldname, type:fldconf.fieldtype, required: fldconf.isrequire&&!fldconf.isprimarykey, html:{label:fldconf.foreigNWindowid?"<a class='nut-link' onclick='linkfield_onClick("+fldconf.foreigNWindowid+","+fldconf.fieldname+".value,\""+fldconf.whereclause+"\")'>"+fldconf.alias+"</a>":fldconf.alias,column:index++%conf.layoutcols,attr:fldconf.isreadonly?"disabled":"tabindex=0"},options:{conf:fldconf}};
+				var field = { field: fldconf.fieldname, type: fldconf.fieldtype, required: fldconf.isrequire, disabled:fldconf.isreadonly, html:{label:fldconf.foreigNWindowid?"<a class='nut-link' onclick='linkfield_onClick("+fldconf.foreigNWindowid+","+fldconf.fieldname+".value,\""+fldconf.whereclause+"\")'>"+fldconf.alias+"</a>":fldconf.alias,column:index++%conf.layoutcols,attr:"tabindex=0"},options:{conf:fldconf}};
 				if(domain){field.options.items=domain.items;field.options.showNone=true};
 				if(fldconf.placeholder)field.html.attr+=" placeholder='"+fldconf.placeholder+"'";
 				if(fldconf.displaylength)field.html.attr+=" style='width:"+fldconf.displaylength+"px'";
@@ -128,23 +128,24 @@ export class NWin {
 			}
 		}
 		var divTool=document.createElement("div");
-		divTool.id="divtool_"+conf.tabid;
+		divTool.id="tool_"+conf.tabid;
 		div.appendChild(divTool);
 		var divContent=document.createElement("div");
-		divContent.id="divcont_"+conf.tabid;
+		divContent.id="cont_"+conf.tabid;
 		divContent.className="nut-full";
 		div.appendChild(divContent);
 		var divForm=conf.layout||document.createElement("div");
-		divForm.id="divform_"+conf.tabid;
+		divForm.id="form_"+conf.tabid;
 		divForm.className = "nut-full";
 		divContent.appendChild(divForm);
 		var divGrid=document.createElement("div");
-		divGrid.id="divgrid_"+conf.tabid;
+		divGrid.id="grid_"+conf.tabid;
 		divGrid.className = "nut-full";
 		divContent.appendChild(divGrid);
 
 		var isArchive=!conf.isnotarchive&&conf.archive;
-		var items=[{type:'button',id:"GRID",text:'⧉',tooltip:"Form/Grid"},
+		var items = [{ type: 'button', id: "SWIT", text: '⧉', tooltip: "Form/Grid" },
+			{ type: 'button', id: "RELOAD", text: '↻', tooltip: "Reload" },
 			{type:'break'},
 			{type:'button',id:"FIND",text:'🔎',hidden:searches.length==0,tooltip:"Find"},
 			{type:'button',id:"NEW",text:'📄',hidden:conf.isnotinsert,tooltip:"Add New"},
@@ -179,10 +180,10 @@ export class NWin {
 					if(lookupfilter[key]){
 						var values=[{id:"FILTER",text:"-All-",tag:[key,"ALL"]}];
 						if(field.domainid){
-							var dmItems=NUT.ctx.domain[field.domainid].items;
+							var dmItems=NUT.domains[field.domainid].items;
 							for(var j=0;j<dmItems.length;j++)
 								values.push({id:"FILTER",text:dmItems[j].text,tag:[key,dmItems[j].id]});
-							items.push({type:'menu',id:"flt_"+key,text:(lookupdefault&&lookupdefault[key])?NUT.ctx.domain[field.domainid].lookup[lookupdefault[key]]:field.alias,items: values});
+							items.push({type:'menu',id:"flt_"+key,text:(lookupdefault&&lookupdefault[key])?NUT.domains[field.domainid].lookup[lookupdefault[key]]:field.alias,items: values});
 							items.push({type:'break'});
 						}
 					}
@@ -204,14 +205,15 @@ export class NWin {
 			lookup[menu.menuid]=item;
 		}
 
-		var items2=[{type:'button',id:"XLS_IMP",text:'📥',tooltip:"Import .xls"},
-					{type:'button',id:"XLS_EXP",text:'📤',tooltip:"Export .xls"},
+		var items2=[{type:'button',id:"XLS_IM",text:'📥',tooltip:"Import .xls"},
+					{type:'button',id:"XLS_EX",text:'📤',tooltip:"Export .xls"},
 					{type:'break'},
-					{type:'button',id:"PREV",text:'<',tooltip:"Previous",tag:-1},
-					{type:'button',id:"NEXT",text:'>',tooltip:"Next",tag:+1},
-					{type:'html',id:"STUT",html:"<u style='color:blue' id='divrec_"+conf.tabid+"' onclick='$(this).w2tag(this.tag)'></u>/<span id='divtotal_"+conf.tabid+"'></span>"},
+			{ type: 'button', id: "PREV", text:'🡄',tooltip:"Previous",tag:-1},
+			{ type: 'button', id: "NEXT", text:'🡆',tooltip:"Next",tag:+1},
+			{ type: 'html', id: "STUT", html: "<div style='padding:6px'><span id='rec_" + conf.tabid +"'></span>/<span id='total_"+conf.tabid+"'></span></div>"},
 					{ type: 'break' },
-					{type:'check',id:"EXPD",text:"«",tooltip:"Collapse"}];
+			{ type: 'check', id: "EXPD", text: "»", tooltip: "Expand/Collapse" },
+			{ type: 'check', id: "CONF", text: "⋮", tooltip: "Config Columns" }];
 		//toolbar
 		(w2ui[divTool.id]||new w2toolbar({
 			name: divTool.id,
@@ -255,17 +257,22 @@ export class NWin {
 		var item=evt.detail.subItem||evt.detail.item;
 		var tab=this.tab;
 		var conf=tab.tag;
-		var grid=w2ui["divgrid_"+tab.id];
-		var form=w2ui["divform_"+tab.id];
+		var grid=w2ui["grid_"+tab.id];
+		var form=w2ui["form_"+tab.id];
 		var timeArchive=null;
-		switch(item.id){
-			case "EXPD":
-				document.getElementById("divcont_"+tab.id).style.height=item.checked?"45vh":"80vh";
-				if(grid.tab.isForm)form.resize();else grid.resize();
+		switch (item.id) {
+			case "CONF":
+				grid.initColumnOnOff();
 				break;
-			case "GRID":
-				grid.tab.isForm=!grid.tab.isForm;
-				NWin.switchFormGrid(tab.id,grid.tab.isForm);
+			case "EXPD":
+				document.getElementById("cont_" + tab.id).style.height = item.checked ? "45vh" : "80vh";
+				if (tab.isForm) form.resize(); else grid.resize();
+				break;
+			case "SWIT":
+				NWin.switchFormGrid(tab);
+				break;
+			case "RELOAD":
+				grid.reload();
 				break;
 			case "PREV":
 			case "NEXT":
@@ -275,13 +282,13 @@ export class NWin {
 				break;
 			case "FIND":
 				//grid.searchOpen(evt.originalEvent.target);
-				var id="divfind_"+tab.id;
+				var id="find_"+tab.id;
 				w2popup.open({
 					title:"🔎 <i>Find</i> - "+conf.tabname,
 					modal:true,
 					width: 920,
 					body: '<div id="'+id+'" class="nut-full"></div>',
-					onClose(evt){NUT.ctx.idFormPopup=null},
+					onClose(evt){c$.idFormPopup=null},
 					onOpen(evt){
 						evt.onComplete=function(){
 							var div=document.getElementById(id);
@@ -310,7 +317,7 @@ export class NWin {
 									}
 								}
 							})).render(div);
-							NUT.ctx.idFormPopup=id;
+							c$.idFormPopup=id;
 						}
 					}
 				});
@@ -320,14 +327,14 @@ export class NWin {
 				//var newfields=[];
 				//for(var i=0;i<form.fields.length;i++)if(!form.fields[i].options.conf.isprimarykey)newfields.push(form.fields[i]);
 				if(conf.parenttabid&&!conf.bangtrunggian)conf.default[conf.truonglienketcon]=grid.parentRecord[conf.truonglienketcha];
-				var id="divnew_"+tab.id;
+				var id="new_"+tab.id;
 				w2popup.open({
 					title:"📄 <i>New</i> - "+conf.tabname,
 					modal:true,
 					width: 920,
 					height: 610,
 					body: '<div id="'+id+'" class="nut-full"></div>',
-					onClose(evt){NUT.ctx.idFormPopup=null},
+					onClose(evt){c$.idFormPopup=null},
 					onOpen(evt){
 						evt.onComplete=function(){
 							var div=document.getElementById(id);
@@ -378,7 +385,7 @@ export class NWin {
 									}
 								}
 							})).render(div);
-							NUT.ctx.idFormPopup=id;
+							c$.idFormPopup=id;
 						}
 					}
 				});
@@ -387,12 +394,12 @@ export class NWin {
 				timeArchive=w2prompt({label:"Archive time",value:new Date()});
 				if(!timeArchive)break;
 			case "SAVE":
-				if(conf.lock&&(grid.tab.isForm?form.record[conf.lock]:grid.get(grid.getSelection()[0])[conf.lock]))
-					w2alert("<span style='color:orange'>Can not update locked record!</span>");
+				if(conf.lock&&(tab.isForm?form.record[conf.lock]:grid.get(grid.getSelection()[0])[conf.lock]))
+					NUT.alert("⚠️ Can not update locked record","yellow");
 				else {
-					if(grid.tab.isForm&form.validate(true).length)return;
+					if(tab.isForm&form.validate(true).length)return;
 					
-					var changes=grid.tab.isForm?[form.getChanges()]:grid.getChanges();
+					var changes=tab.isForm?[form.getChanges()]:grid.getChanges();
 					var tagNode="#tb_divtool_"+tab.id+"_item_SPACE";
 					var hasChanged=false;
 					var columnkey=conf.columnkey;
@@ -402,7 +409,7 @@ export class NWin {
 							var data={};//remove "" value
 							for(var key in change)if(change.hasOwnProperty(key)&&key!=columnkey)
 								data[key]=(change[key]==""?null:change[key]);
-							var recid=(grid.tab.isForm?form.record[columnkey]:change[columnkey]);
+							var recid=(tab.isForm?form.record[columnkey]:change[columnkey]);
 							if(conf.beforechange){
 								if(conf.onchange)NUT.runComponent(conf.onchange,{action:item.id,recid:recid,data:data,config:conf});
 							}else{
@@ -410,7 +417,7 @@ export class NWin {
 								NUT.ds.update(p, function (res) {
 									if (res.success) {
 										if (timeArchive) archiveRecord(conf.urledit.substr(0, conf.urledit.lastIndexOf("/")), item.id, data, recid, conf.tableid, timeArchive);
-										if (grid.tab.isForm) grid.set(recid, data);
+										if (tab.isForm) grid.set(recid, data);
 										NUT.notify("ℹ️ Record updated.","lime");
 
 										if (conf.onchange) NUT.runComponent(conf.onchange, { action: item.id, recid: recid, data: data, config: conf });
@@ -420,7 +427,7 @@ export class NWin {
 							hasChanged=true;
 						}
 					}
-					if(hasChanged)grid.tab.isForm?form.save():grid.save();
+					if (hasChanged) tab.isForm ? form.mergeChanges() : grid.mergeChanges();
 					else NUT.notify("⚠️ No change!","yellow");
 				}
 				break;
@@ -430,14 +437,14 @@ export class NWin {
 			case "DEL":
 				 NUT.confirm('<span style="color:red">DELETE selected record?</span>',function(awnser){
 					 if (awnser == "yes") {
-						 var recid = grid.tab.isForm ? form.record[conf.columnkey] : grid.getSelection()[0];
+						 var recid = tab.isForm ? form.record[conf.columnkey] : grid.getSelection()[0];
 						 if (conf.beforechange) {
 							 if (conf.onchange) NUT.runComponent(conf.onchange, { action: item.id, recid: recid, config: conf });
 						 } else {
 							 var tagNode = "#tb_divtool_" + tab.id + "_item_SPACE";
 							 if (recid) NUT.ds.delete({ url: conf.url + conf.tablename, where: [conf.columnkey, "=", recid] }, function (res) {
 								 if (res.success) {
-									 if (timeArchive) archiveRecord(conf.urledit.substr(0, conf.urledit.lastIndexOf("/")), item.id, grid.tab.isForm ? form.record : grid.get(recid), recid, conf.tableid, timeArchive);
+									 if (timeArchive) archiveRecord(conf.urledit.substr(0, conf.urledit.lastIndexOf("/")), item.id, tab.isForm ? form.record : grid.get(recid), recid, conf.tableid, timeArchive);
 									 grid.remove(recid);
 									 NUT.notify("ℹ️ 1 record deleted.", "lime");
 
@@ -459,23 +466,23 @@ export class NWin {
 				}
 				grid.reload();
 				break;
-			case "XLS_IMP":
+			case "XLS_IM":
 				var fieldnames=[];
 				for(var i=0;i<conf.fields.length;i++)
 					fieldnames.push(conf.fields[i].fieldname);
 				var header=fieldnames.join('\t')+"\n";
 				var id="txtimpxls_"+tab.id;
-				NUT.ctx.tabconf=conf;
+				c$.tabconf=conf;
 				w2popup.open({
 					title:"📥 <i>Import excel</i> - "+conf.tabname,
 					modal:true,
 					width: 1000,
 					height: 700,
 					body: '<textarea cols='+(header.length+8*fieldnames.length)+' id="'+id+'" style="height:100%">'+header+'</textarea>',
-					buttons: '<button class="w2ui-btn" onclick="w2popup.close()">⛌ Close</button><button class="w2ui-btn" onclick="xlsInsert_onClick(NUT.ctx.tabconf,'+id+'.value)">➕ Insert data</button><button class="w2ui-btn" onclick="xlsUpdate_onClick(NUT.ctx.tabconf,'+id+'.value)">✔️ Update data</button>'
+					buttons: '<button class="w2ui-btn" onclick="w2popup.close()">⛌ Close</button><button class="w2ui-btn" onclick="xlsInsert_onClick(c$.tabconf,'+id+'.value)">➕ Insert data</button><button class="w2ui-btn" onclick="xlsUpdate_onClick(c$.tabconf,'+id+'.value)">✔️ Update data</button>'
 				});
 				break;
-			case "XLS_EXP":
+			case "XLS_EX":
 				var win = window.open();
 							
 				var table=win.document.createElement("table");
@@ -521,7 +528,7 @@ export class NWin {
 				grid.reload();
 				break;
 			case "LOCK":
-				var record=grid.tab.isForm?form.record:grid.record;
+				var record=tab.isForm?form.record:grid.record;
 				var label=record[conf.lock]?"🔓 Unlock":"🔒 Lock";
 				w2confirm(label+' selected record?').yes(function(){
 					var data={};
@@ -529,7 +536,7 @@ export class NWin {
 					NUT.ds.update({url:conf.urledit,data:data,where:[conf.columnkey,"=",record[conf.columnkey]]},function(res){
 						if (res.success) {
 							record[conf.lock] = data[conf.lock];
-							grid.tab.isForm ? form.refresh() : grid.refresh();
+							tab.isForm ? form.refresh() : grid.refresh();
 						} else NUT.notify("⛔ ERROR: " + res.result, "red");
 					});
 				});
@@ -538,7 +545,7 @@ export class NWin {
 				var recid=grid.tab.isForm?form.record[conf.columnkey]:grid.getSelection();
 				NUT.ds.select({url:conf.urledit.substr(0,conf.urledit.lastIndexOf("/"))+"/sysarchive",where:[["tableid","=",conf.tableid],["recordid","=",recid]]},function(res){
 					if (res.success) {
-						var id = "divarch_" + tab.id;
+						var id = "arch_" + tab.id;
 						w2popup.open({
 							title: "🕰️ <i>Archive</i> - " + conf.tabname,
 							modal: true,
@@ -599,7 +606,7 @@ export class NWin {
 							gsmap:null
 						});
 					}else{
-						NUT.notif(item.id+" not starts with 'Com_'");
+						NUT.notify("⚠️" +item.id+" not starts with 'Com_'","yellow");
 					}
 				}
 		}
@@ -621,14 +628,14 @@ export class NWin {
 				GSMap.applyFilter(lyrconf.maporder,lyrconf.seqno,[conf.columndohoa,"=",evt.value_new]);
 
 				var where=[conf.columnkey,"=",evt.value_new];
-				var ext=NUT.ctx.extent[where.toString()];
+				var ext=c$.extent[where.toString()];
 				if(ext)
 					GSMap.zoomToExtent(ext);
 				else NUT.ds.select({url:conf.foreigntable_url,select:"minx,miny,maxx,maxy",where:where},function(res){
 					if (res.success) {
 						var ext = [res[0].minx, res[0].miny, res[0].maxx, res[0].maxy];
 						if (res.length) GSMap.zoomToExtent(ext);
-						NUT.ctx.extent[where.toString()] = ext;
+						c$.extent[where.toString()] = ext;
 					} else NUT.notify("⛔ ERROR: " + res.result, "red");
 				});
 			}
@@ -646,7 +653,7 @@ export class NWin {
 			orderby: (postData.sort ? postData.sort[0].field + " " + postData.sort[0].direction : (tabconf.orderbyclause || tabconf.columnkey + " desc"))
 		}
 		
-		//if(evt.url.includes("/sys")||evt.url.includes("/nv_"))data.where="clientid="+NUT.ctx.user.clientid;
+		//if(evt.url.includes("/sys")||evt.url.includes("/nv_"))data.where="clientid="+c$.user.clientid;
 
 		// still bug
 		if (tabconf.whereclause)
@@ -678,45 +685,44 @@ export class NWin {
 				this.noZoomTo = true;
 				this.select(records[0][this.recid]);
 			}
-			NWin.switchFormGrid(tab.id, tab.isForm);
-			document.getElementById("divrec_" + tab.id).innerHTML = total?1:0;
-			document.getElementById("divtotal_" + tab.id).innerHTML = total;
+			NWin.switchFormGrid(tab,total==1);
+			document.getElementById("rec_" + tab.id).innerHTML = total?1:0;
+			document.getElementById("total_" + tab.id).innerHTML = total;
 		}
 	}
 	grid_onSelect(evt) {
-		var recid = evt.detail.recid || evt.detail.clicked.recid;
-		if (recid != "-none-") {
-			var conf = this.tab.tag;
-			this.record = this.get(recid);
-			var lab = document.getElementById("divrec_" + conf.tabid);
-			lab.innerHTML = this.get(recid, true) + 1;
-			lab.tag = conf.columnkey + "=" + recid;
+		var recid = (evt.detail.clicked ? evt.detail.clicked.recid : evt.detail.recid);
 
-			if (this.tab.tag.geotableid) {
-				if (this.noZoomTo)
-					this.noZoomTo = false;
-				else {
-					var where = "";
-					for (var i = 0; i < this.tab.tag.fields.length; i++) {
-						var field = this.tab.tag.fields[i];
-						if (field.columndohoa && this.record[field.columndohoa]) {
-							var clause = field.columndohoa + "=" + this.record[field.columndohoa];
-							where += where ? " and " + clause : clause;
-						}
+		var conf = this.tab.tag;
+		this.record = this.get(recid);
+		var lab = document.getElementById("rec_" + conf.tabid);
+		lab.innerHTML = this.get(recid, true) + 1;
+		lab.tag = conf.columnkey + "=" + recid;
+
+		if (this.tab.tag.geotableid) {
+			if (this.noZoomTo)
+				this.noZoomTo = false;
+			else {
+				var where = "";
+				for (var i = 0; i < this.tab.tag.fields.length; i++) {
+					var field = this.tab.tag.fields[i];
+					if (field.columndohoa && this.record[field.columndohoa]) {
+						var clause = field.columndohoa + "=" + this.record[field.columndohoa];
+						where += where ? " and " + clause : clause;
 					}
-					var lyrconf = GSMap.getLayerConfig(this.tab.tag.geotableid);
-					if (where) GSMap.zoomToFeature(lyrconf.maporder, lyrconf.layername, where);
 				}
+				var lyrconf = GSMap.getLayerConfig(this.tab.tag.geotableid);
+				if (where) GSMap.zoomToFeature(lyrconf.maporder, lyrconf.layername, where);
 			}
-			if (this.record) {
-				NWin.updateFormRecord(conf, this.record, this.parentRecord);
-				for (var i = 0; i < conf.children.length; i++)
-					NWin.updateChildGrids(conf.children[i], this.record);
-			}
+		}
+		if (this.record) {
+			NWin.updateFormRecord(conf, this.record, this.parentRecord);
+			for (var i = 0; i < conf.children.length; i++)
+				NWin.updateChildGrids(conf.children[i], this.record);
 		}
 	}
 	static updateFormRecord(conf,record,parentRecord){
-		var form=w2ui["divform_"+conf.tabid];
+		var form=w2ui["form_"+conf.tabid];
 		
 		//fire onchange
 		/*for(var i=0;i<form.fields.length;i++){
@@ -731,30 +737,31 @@ export class NWin {
 		form.refresh();
 	}
 	static updateChildGrids(conf, record) {
-		var divTab = document.getElementById("divtab_" + conf.tabid);
+		var divTab = document.getElementById("tab_" + conf.tabid);
 		if (divTab) {
-			var grid = w2ui["divgrid_" + conf.tabid];
+			var grid = w2ui["grid_" + conf.tabid];
 			if (record) {
 				divTab.needUpdate = true;
 				grid.parentRecord = record;
 			}
 			if (divTab.needUpdate && divTab.style.display.length == 0) {
-				var search = grid.getSearchData(conf.linkchildcolumn);
-				if (conf.midtableid) {//lien ket n-n
-					NUT.ds.select({ url: conf.midtableid, select: conf.midchildcolumn, where: [conf.midparentcolumn, "=", grid.parentRecord[conf.linkparentcolumn]] }, function (res) {
+				var search = grid.getSearchData(conf.linkchildfield);
+				if (conf.midtable) {//lien ket n-n
+					NUT.ds.select({ url: conf.url+conf.midtable, select: conf.midchildfield, where: [conf.midparentfield, "=", grid.parentRecord[conf.linkparentfield]] }, function (res) {
 						if (res.success) {
 							var ids = [];
-							for (var i = 0; i < res.length; i++)
-								ids.push(res[i][conf.midchildcolumn]);
-							grid.originSearch = { field: conf.linkchildcolumn, operator: "in", value: ids };
+							for (var i = 0; i < res.result.length; i++) {
+								ids.push(res.result[i][conf.midchildfield]);
+							}
+							grid.originSearch = { field: conf.linkchildfield, operator: "in", value: ids };
 							if (search) search.value = ids;
 							else grid.searchData.push(grid.originSearch);
 							grid.reload();
 						} else NUT.notify("⛔ ERROR: " + res.result, "red");
 					});
 				} else {
-					grid.originSearch = { field: conf.linkchildcolumn, operator: "=", value: grid.parentRecord[conf.linkparentcolumn] };
-					if (search) search.value = grid.parentRecord[conf.linkparentcolumn];
+					grid.originSearch = { field: conf.linkchildfield, operator: "=", value: grid.parentRecord[conf.linkparentfield] };
+					if (search) search.value = grid.parentRecord[conf.linkparentfield];
 					else grid.searchData.push(grid.originSearch);
 					grid.reload();
 				}
@@ -766,7 +773,7 @@ export class NWin {
 		if(conf.children.length){	
 			for(var i=0;i<conf.children.length;i++){
 				fldconf=conf.children[i];
-				var form=w2ui[NUT.ctx.idFormPopup||"divform_"+fldconf.tabid];
+				var form=w2ui[c$.idFormPopup||"form_"+fldconf.tabid];
 				if(fldconf.fieldtype=="select")
 					this.loadChildSelect(fldconf,record[conf.fieldname]);
 				if(fldconf.calculation){
@@ -782,7 +789,7 @@ export class NWin {
 					var	value=eval(fldconf.calculation);
 					form.record[fldconf.fieldname]=value;
 					form.refresh(fldconf.fieldname);
-					//w2ui["divgrid_"+fldconf.tabid].grid.refresh();
+					//w2ui["grid_"+fldconf.tabid].grid.refresh();
 					this.updateChildFields(fldconf,form.record,form.parentRecord);
 				}
 				if(fldconf.displaylogic){
@@ -797,7 +804,7 @@ export class NWin {
 		}
 	}
 	calculateChilds(info){
-		var records=w2ui["divgrid_"+info.tab].records;
+		var records=w2ui["grid_"+info.tab].records;
 		var result=(info.func=="min"?Number.MAX_VALUE:(info.func=="max"?Number.MIN_VALUE:0));
 		for(var i=0;i<records.length;i++){
 			value=records[i][info.field];
@@ -814,17 +821,16 @@ export class NWin {
 	}
 	
 	grid_onDblClick (evt){
-		if(!this.columns[evt.detail.column].editable){
-			this.tab.isForm=!this.tab.isForm;
-			NWin.switchFormGrid(this.tab.id,true);
-		}
+		if(!this.columns[evt.detail.column].editable)NWin.switchFormGrid(this.tab);
 	}
-	static switchFormGrid(tabid,isForm){
-		var form=w2ui["divform_"+tabid];
-		var grid=w2ui["divgrid_"+tabid];
-		form.box.style.display=isForm?"":"none";
-		grid.box.style.display=isForm?"none":"";
-		if(isForm)form.resize();else grid.resize();
+	static switchFormGrid(tab, showForm) {
+		tab.isForm = (showForm === undefined?!tab.isForm:showForm);
+		var form=w2ui["form_"+tab.id];
+		var grid=w2ui["grid_"+tab.id];
+		form.box.style.display = tab.isForm ?"":"none";
+		grid.box.style.display = tab.isForm ?"none":"";
+		if (tab.isForm) form.resize();
+		else grid.resize();
 	}
 	xlsInsert_onClick(conf,csv){
 		if(csv.includes(","))
@@ -848,7 +854,7 @@ export class NWin {
 			var domain={},prikey=null,privalue=null;
 			for(var i=0;i<conf.fields.length;i++){
 				var fld=conf.fields[i];
-				if(fld.domainid)domain[fld.fieldname]=NUT.ctx.domain[fld.domainid].lookdown;
+				if(fld.domainid)domain[fld.fieldname]=NUT.domains[fld.domainid].lookdown;
 				if(fld.isprimarykey)prikey=fld.fieldname;
 			}
 
@@ -880,7 +886,7 @@ export class NWin {
 			archive:JSON.stringify(archive),
 			recordid:recid,
 			tableid:tableid,
-			clientid:NUT.ctx.user.clientid
+			clientid:c$.user.clientid
 		};
 		NUT.ds.insert({url:url+"/sysarchive",data:data},function(res){
 			if (res.sucess)
@@ -890,12 +896,12 @@ export class NWin {
 		});
 	}
 	loadChildSelect(fldconf,value){
-		var form=w2ui[NUT.ctx.idFormPopup||"divform_"+fldconf.tabid];
+		var form=w2ui[c$.idFormPopup||"form_"+fldconf.tabid];
 		var field=form.get(fldconf.fieldname);
-		var grid=w2ui["divgrid_"+fldconf.tabid];
+		var grid=w2ui["grid_"+fldconf.tabid];
 		var column=grid.getColumn(fldconf.fieldname);
 		var key=fldconf.foreigntableid+"-"+value;
-		var domain=NUT.ctx.domain[key];
+		var domain=NUT.domains[key];
 		if(domain){
 			field.options.items=domain.options;
 			form.refresh();
@@ -912,7 +918,7 @@ export class NWin {
 					domain.options.push(item);
 					domain.lookup[item.id] = item.text;
 				}
-				NUT.ctx.domain[fldconf.foreigntableid + "-" + value] = domain;
+				NUT.domains[fldconf.foreigntableid + "-" + value] = domain;
 				field.options.items = domain.options;
 				form.refresh();
 				if (column.editable) {

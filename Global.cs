@@ -11,7 +11,7 @@ namespace SQLRestC
         public const String ROOT = "rest/";
         public const String MS_PATH = "MS_Path";
         public const String MS_DESCRIPTION = "MS_Description";
-        public const int LIMIT = 100;
+        public const int LIMIT = 200;
         public static bool safeSqlInjection(String sql)
         {
             return !sql.Contains(";");

@@ -1,4 +1,4 @@
-import { w2ui, w2layout, w2toolbar, w2form, w2utils, w2confirm , w2alert, w2popup, w2sidebar } from "../lib/w2ui.es6.min.js";
+import { w2ui, w2layout, w2toolbar, w2form, w2utils, w2confirm, w2alert, w2popup, w2sidebar } from "../lib/w2ui.es6.min.js";
 import { NWin } from "./js/window.js";
 import { SqlREST } from "./js/sqlrest.js";
 
@@ -13,8 +13,7 @@ NUT.ds = SqlREST;
 NUT.w2alert = w2alert;
 NUT.w2confirm = w2confirm;
 NUT.utils = w2utils;
-
-var _isMobile = (window.orientation !== undefined);
+NUT.w2ui = w2ui;
 
 window.onload = function () {
 	document.body.innerHTML = '<div id="divLogin" class="nut-full"></div>';
@@ -41,8 +40,7 @@ window.onload = function () {
 					NUT.ds.select({ url: NUT.URL + "nv_user_site", where: [["username", "=", this.record.Username], ["password", "=", this.record.Password]] }, function (res) {
 						if (res.success) {
 							if (res.result.length == 1) {
-								NUT.ctx.user = res.result[0];
-								NUT.username = NUT.ctx.user.username;
+								c$.user = res.result[0];
 								localStorage.setItem(NUT.I_USER, btoa(self.record.Username));
 								localStorage.setItem(NUT.I_PASS, self.record.SavePassword ? btoa(self.record.Password) : "");
 								
@@ -52,22 +50,22 @@ window.onload = function () {
 									panels: [
 										{ type: 'top', size: 38, html: '<div id="divTop" class="nut-full"></div>' },
 										{ type: 'left', size: 300, resizable: true, html: '<div id="divLeft" class="nut-full"></div>', hidden: true },
-										{ type: 'main', html: '<div id="divMain" class="nut-full" style="background:url(\'site/' + NUT.ctx.user.siteid + '/back.png\');background-size:cover"><div id="divApp" style="position:absolute;width:100%;top:30%"></div><div id="divTool" style="position:absolute;width:100%;bottom:10px"></div></div>' }
+										{ type: 'main', html: '<div id="divMain" class="nut-full" style="background:url(\'site/' + c$.user.siteid + '/back.png\');background-size:cover"><div id="divApp" style="position:absolute;width:100%;top:30%"></div><div id="divTool" style="position:absolute;width:100%;bottom:10px"></div></div>' }
 									],
 								})).render(divLogin);
 
 								(w2ui["tbrTop"] || new w2toolbar({
 									name: "tbrTop",
 									items: [
-										{ type: 'html', id: 'logo', html: '<img src="site/' + NUT.ctx.user.siteid + '/logo.png"/>' },
-										{ type: 'html', id: 'site', html: '<b>' + NUT.ctx.user.sitecode + '</b><br/>' + NUT.ctx.user.sitename },
+										{ type: 'html', id: 'logo', html: '<img src="site/' + c$.user.siteid + '/logo.png"/>' },
+										{ type: 'html', id: 'site', html: '<b>' + c$.user.sitecode + '</b><br/>' + c$.user.sitename },
 										{ type: 'spacer', id: "divSpacer" },
 										{ type: 'button', id: "home", icon: "nut-i-home", tooltip: "Home" },
 										{ type: 'button', id: "notify", icon: "nut-i-notification", tooltip: "Notify" },
 										{ type: 'button', id: "job", icon: "nut-i-information", tooltip: "Job" },
 										{ type: 'break' },
 										{
-											type: 'menu', id: 'user', text: NUT.ctx.user.username, items: [
+											type: 'menu', id: 'user', text: c$.user.username, items: [
 												{ id: 'profile', text: 'Profile...' },
 												{ id: 'changepass', text: 'Change password' },
 												{ text: '--' },
@@ -78,7 +76,7 @@ window.onload = function () {
 									],
 									onClick(evt) {
 										if (evt.target == "user:profile") {
-											w2alert("<table><tr><td><b><i>Tài khoản:</i></b></td><td colspan='3'>" + NUT.ctx.user.username + "</td></tr><tr><td><b><i>Họ tên:</i></b></td><td colspan='3'>" + NUT.ctx.user.fullname + "</td></tr><tr><td><b><i>Điện thoại:</i></b></td><td>" + NUT.ctx.user.phone + "</td><td><b><i>Nhóm:</i></b></td><td>" + NUT.ctx.user.groupid + "</td></tr><tr><td><b><i>Trạng thái:</i></b></td><td>" + NUT.ctx.user.status + "</td><td><b><i>Ghi chú:</i></b></td><td>" + NUT.ctx.user.description + "</td></tr></table>", "<b>ℹ️ Information #<i>" + NUT.ctx.user.userid + "</i></b>");
+											w2alert("<table><tr><td><b><i>Tài khoản:</i></b></td><td colspan='3'>" + c$.user.username + "</td></tr><tr><td><b><i>Họ tên:</i></b></td><td colspan='3'>" + c$.user.fullname + "</td></tr><tr><td><b><i>Điện thoại:</i></b></td><td>" + c$.user.phone + "</td><td><b><i>Nhóm:</i></b></td><td>" + c$.user.groupid + "</td></tr><tr><td><b><i>Trạng thái:</i></b></td><td>" + c$.user.status + "</td><td><b><i>Ghi chú:</i></b></td><td>" + c$.user.description + "</td></tr></table>", "<b>ℹ️ Information #<i>" + c$.user.userid + "</i></b>");
 										}
 										else if (evt.target == "user:changepass") {
 											w2popup.open({
@@ -110,7 +108,7 @@ window.onload = function () {
 }
 
 function openDesktop() {
-	NUT.ds.select({ url: NUT.URL + "nv_access_app", orderby: "seqno", where: ["userid", "=", NUT.ctx.user.userid] }, function (res) {
+	NUT.ds.select({ url: NUT.URL + "nv_access_app", orderby: "seqno", where: ["userid", "=", c$.user.userid] }, function (res) {
 		if (res.success) {
 			var id = null;
 			var appHtml = "<center>";
@@ -120,7 +118,7 @@ function openDesktop() {
 				if (data.appid != null) {
 					if (id != data.appid) {
 						id = data.appid;
-						NUT.ctx.apps[id] = data;
+						NUT.apps[id] = data;
 						if (data.issystem) {
 							toolHtml += "<div class='nut-tool' onclick='openApp(" + id + ")' title='" + data.description + "'><img src='site/" + data.siteid + "/"+id+"/icon.png'/></div>";
 						} else {
@@ -137,7 +135,7 @@ function openDesktop() {
 }
 
 function userChangePassword(){
-	var user=NUT.ctx.user;
+	var user=c$.user;
 	if(txtUser_PasswordOld.value&&txtUser_PasswordNew.value&&txtUser_PasswordNew2.value){
 		if(txtUser_PasswordOld.value==user.password&&txtUser_PasswordNew.value==txtUser_PasswordNew2.value)
 			NUT.ds.update({ url: NUT.URL + "n_user", data: { password: txtUser_PasswordNew.value }, where: [["userid", "=", user.userid], ["password", "=", txtUser_PasswordOld.value]] }, function (res) {
@@ -150,21 +148,20 @@ function userChangePassword(){
 	}else w2alert("<span style='color:orange'>Old password, new password and retype password are all required!</span>");
 }
 
-window.openApp=function(idApp){
+window.openApp=function(id){
 	//load menu
-	NUT.ctx.curWinId=null;
-	NUT.ctx.curApp=NUT.ctx.apps[idApp];
+	c$.app=NUT.apps[id];
 	
-	if(NUT.ctx.curApp.apptype=="engine"){
-		window.open(NUT.ctx.curApp.link+"?username="+NUT.ctx.user.username+"&clientid="+NUT.ctx.user.clientid);
+	if(c$.app.apptype=="engine"){
+		window.open(c$.app.link+"?username="+c$.user.username+"&clientid="+c$.user.clientid);
 		labCurrentApp.innerHTML="";
 	}else {
-		var isGis=(NUT.ctx.curApp.apptype=="gis");
-		divMain.innerHTML = '<div id="divTitle" style="padding:6px"><img width="64" height="64" src="site/' + NUT.ctx.curApp.siteid+'/'+idApp+'/icon.png"/><br/><h2><b style="color:brown">'+NUT.ctx.curApp.appname+'</b></h2><br/><hr/><br/><h3><i>'+NUT.ctx.curApp.description+'</i></h3></div>';
+		var isGis=(c$.app.apptype=="gis");
+		divMain.innerHTML = '<div id="divTitle" style="padding:6px"><img width="64" height="64" src="site/' + c$.user.siteid+'/'+id+'/icon.png"/><br/><h2><b style="color:brown">'+c$.app.appname+'</b></h2><br/><hr/><br/><h3><i>'+c$.app.description+'</i></h3></div>';
 		divMain.style.backgroundImage="";
 		
 		if(isGis){
-			NUT.ds.select({ url: NUT.URL + "nv_map_service",orderby:"seqno",where:["appid","=",idApp]},function(res){
+			NUT.ds.select({ url: NUT.URL + "nv_map_service",orderby:"seqno",where:["appid","=",id]},function(res){
 				if (res.success) {
 					var maps = res.result;
 					var lookup={};
@@ -173,7 +170,7 @@ window.openApp=function(idApp){
 						map.subLayers=[];
 						lookup[map.mapid]=map;
 					}
-					NUT.ds.select({ url: NUT.URL + "n_layer",orderby:"seqno",where:["appid","=",idApp]},function(res2){
+					NUT.ds.select({ url: NUT.URL + "n_layer",orderby:"seqno",where:["appid","=",id]},function(res2){
 						if (res2.success) {
 							for (var i = 0; i < res2.result.length; i++) {
 								var lyr = res.result[i];
@@ -200,21 +197,21 @@ window.openApp=function(idApp){
 			});
 		}
 		//load domain
-		NUT.ds.select({ url: NUT.URL + "n_domain",clientid:NUT.ctx.curApp.clientid,where:["appid","=",idApp]},function(res){
+		NUT.ds.select({ url: NUT.URL + "n_domain",where:["appid","=",id]},function(res){
 			if (res.success)
-				NUT.ctx.domain = NUT.configDomain(res.result);
+				NUT.domains = NUT.configDomain(res.result);
 			else
 				NUT.notify("⛔ ERROR: " + res.result, "red");
 		});
 		//load service
-		NUT.ds.select({ url: NUT.URL + "nv_appservice_service",clientid:NUT.ctx.curApp.clientid,where:["appid","=",idApp]},function(res){
-			NUT.ctx.service = {};
+		NUT.ds.select({ url: NUT.URL + "nv_appservice_service",clientid:c$.user.siteid,where:["appid","=",id]},function(res){
+			c$.service = {};
 			if (res.success)
-				for (var i = 0; i < res.length; i++)NUT.ctx.service[res[i].servicename] = res[i];
+				for (var i = 0; i < res.length; i++)c$.service[res[i].servicename] = res[i];
 			else
 				NUT.notify("⛔ ERROR: " + res.result, "red");
 		});
-		NUT.ds.select({ url: NUT.URL + "nv_rolemenu_menu",clientid:NUT.ctx.curApp.clientid,where:[["menutype","=","menu"],["appid","=",idApp],["roleid","=",NUT.ctx.curApp.roleid]]},function(res){
+		NUT.ds.select({ url: NUT.URL + "nv_rolemenu_menu",where:[["menutype","=","menu"],["appid","=",id],["roleid","=",c$.app.roleid]]},function(res){
 			if (res.success) {
 				var ids = {}, pids = {};
 				for (var i = 0; i < res.result.length; i++) {
@@ -222,13 +219,15 @@ window.openApp=function(idApp){
 					if (rec.menuid) ids[rec.menuid] = true;
 					if (rec.parentid) pids[rec.parentid] = true;
 				}
-				NUT.ds.select({ url: NUT.URL + "n_menu", orderby: "seqno", where: ["or", ["menuid", "in", Object.keys(ids)], ["menuid", "in", Object.keys(pids)]] }, function (res2) {
+				var pkeys = Object.keys(pids);
+				var where = (pkeys.length ? ["or", ["menuid", "in", Object.keys(ids)], ["menuid", "in", pkeys]] : ["menuid", "in", Object.keys(ids)]);
+				NUT.ds.select({ url: NUT.URL + "n_menu", orderby: "seqno", where: where }, function (res2) {
 					if (res2.success) {
 						var nodes = [], lookup = {}, openWinId = null;
 						for (var i = 0; i < res2.result.length; i++) {
 							var menu = res2.result[i];
 							if (menu.linkwindowid && menu.isopen) openWinId = menu.linkwindowid;
-							var node = { id: menu.menuid, text: menu.menuname, expanded: menu.isopen, tag: menu.linkwindowid || menu.execname };
+							var node = { id: menu.menuid, text: menu.menuname, expanded: menu.isopen, tag: menu.linkwindowid || menu.execname, where: JSON.parse(menu.whereclause) };
 							if (menu.parentid) {
 								var parent = lookup[menu.parentid];
 								parent.group = true;
@@ -237,14 +236,24 @@ window.openApp=function(idApp){
 							} else nodes.push(node);
 							lookup[node.id] = node;
 						};
+						//SYSTEM APPLICATION
+						if (id == 0) {
+							var childs = [];
+							for (var key in NUT.apps) if (NUT.apps.hasOwnProperty(key)) {
+								var app = NUT.apps[key];
+								childs.push({ id: "app_" + app.appid, text: app.appname, tag: (app.apptype == "app"?3:5), where: ["appid", "=", app.appid] });
+							}
+							nodes.push({ id: "app_", text: "🌰 Applications", group:true, expanded: true, nodes:childs });
+						}
 
 						(w2ui["mnuMain"]||new w2sidebar({
 							name: "mnuMain",
 							flatButton: true,
 							nodes: nodes,
+							topHTML: '<div><input placeholder="⌕ Search..." style="width:100%"/></div>',
 							onClick: menu_onClick,
 							onFlat: function (evt) {
-								var width = _isMobile ? "100%" : "300px";
+								var width = NUT.isMobile ? "100%" : "300px";
 								w2ui.layMain.sizeTo("left", evt.detail.goFlat ? '40px' : width, true);
 								divLeft.style.width = (evt.detail.goFlat ? '40px' : width);
 							}
@@ -260,13 +269,13 @@ window.openApp=function(idApp){
 }
 function map_onSelect(evt){
 	if(evt.tool=="toolSelect"){
-		var tabconf=NUT.ctx.winconfig[NUT.ctx.curWinid].tabs[0];
-		var grid=w2ui["divgrid_"+tabconf.tabid];
+		var tabconf=NUT.wins[c$.winid].tabs[0];
+		var grid=w2ui["grid_"+tabconf.tabid];
 		var where=["or"];
 		for(var i=0;i<evt.features.length;i++){
 			var feat=evt.features[i];
 			var lyrconf=GSMap.getLayerConfig(feat.getId().split(".")[0]);
-			if(lyrconf.windowid==NUT.ctx.curWinid){
+			if(lyrconf.windowid==c$.winid){
 				var attr=feat.getProperties();
 				var clause=[];
 				for(var j=0;j<tabconf.fields.length;j++){
@@ -287,59 +296,63 @@ function map_onSelect(evt){
 }
 
 function menu_onClick(evt) {
-	var tag=evt.detail.node.tag;
-	if(Number.isInteger(tag)){
-		var win = new NWin(tag);
-		var a = createWindowTitle(tag, divTitle);
-		var conf=NUT.ctx.winconfig[tag];
-		if(conf){
-			if(conf.execname)
-				NUT.runComponent(conf.execname);
-			else{
-				conf.tabs[0].tempWhere=evt.tempWhere;
-				win.buildWindow(a.div,conf,0);
+	var tag = evt.object.tag;
+	if (Number.isInteger(tag)) {
+		var appName = Number.isInteger(evt.object.id) ? undefined : evt.object.text;
+		var conf = NUT.wins[tag];
+		var a = createWindowTitle(tag, divTitle, appName);
+		if (!a) {//already open
+			if (appName) {
+				var grid = NUT.w2ui["grid_" + conf.tabs[0].tabid];
+				grid.tab.tag.tempWhere = evt.object.where;
+				grid.reload();
 			}
-			a.innerHTML=conf.windowname;
+			return;
+		}
+		var win = new NWin(tag);
+		if (conf) {
+			conf.tabs[0].tempWhere=evt.object.where;
+			win.buildWindow(a.div, conf, 0);
+			a.innerHTML = conf.windowname;
 		}else{
 			NUT.ds.select({ url: NUT.URL + "n_cache",where:["windowid","=",tag]},function(res){
 				if (res.success) {
 					var cache = res.result[0];
 					if (cache) {
 						conf = NUT.configWindow(zipson.parse(cache.config), JSON.parse(cache.layout));
-						if (conf.execname) {
-							NUT.runComponent(conf.execname);
-						} else {
-							conf.tabs[0].tempWhere = evt.tempWhere;
-							conf.tabid = conf.windowid;
-							NUT.ctx.winconfig[tag] = conf;
-							var needCaches = [];
-							for (var key in conf.needCache) {
-								if (conf.needCache.hasOwnProperty(key) && !NUT.ctx.domain[key]) needCaches.push(conf.needCache[key]);
-							}
-							win.buildWindow(a.div, conf, 0);
+						conf.tabs[0].tempWhere = evt.object.where;
+						conf.tabid = conf.windowid;
+						NUT.wins[tag] = conf;
+						var needCaches = [];
+						for (var key in conf.needCache) {
+							if (conf.needCache.hasOwnProperty(key) && !NUT.domains[key]) needCaches.push(conf.needCache[key]);
 						}
-						a.innerHTML = conf.windowname;
+						win.buildWindow(a.div, conf, 0);
+						
+						a.innerHTML = appName||conf.windowname;
 					} else NUT.notify("⚠️ No cache for window "+tag,"yellow");
 				} else NUT.notify("⛔ ERROR: " + res.result, "red");
 			});
 		}
-		if(_isMobile&&!w2ui.w2menu.flat)w2ui.w2menu.goFlat();
-		NUT.ctx.curWinid=tag;
+		if(NUT.isMobile&&!w2ui.w2menu.flat)w2ui.w2menu.goFlat();
+		c$.winid=tag;
 	}else{
 		NUT.runComponent(tag);
 	}
 }
 
-function createWindowTitle(id, divTitle, noClose){
-	if (!NUT.ctx.curWinid) divTitle.innerHTML = "";
-	else for (var i = 0; i < divTitle.childNodes.length; i++) {
-		var node = divTitle.childNodes[i].firstChild;
-		node.style.color = "gray";
-		if (id == node.tag) {
-			node.onclick();
-			return;
+function createWindowTitle(id, divTitle, appName){
+	if (c$.winid)
+		for (var i = 0; i < divTitle.childNodes.length; i++) {
+			var node = divTitle.childNodes[i].firstChild;
+			node.style.color = "gray";
+			if (id == node.tag) {
+				if (appName) node.innerHTML = appName;
+				node.onclick();
+				return;
+			}
 		}
-	}
+	else divTitle.innerHTML = "";
 
 	var divWindow = divTitle.parentNode;
 	for (var i = 1; i < divWindow.childNodes.length; i++)
@@ -366,21 +379,21 @@ function createWindowTitle(id, divTitle, noClose){
 			children[i].firstChild.style.color = "gray";
 		this.style.color = "";
 
-		NUT.ctx.curWinid = this.tag;
+		c$.winid = this.tag;
 	};
 	span.appendChild(a);
 
 	var close = document.createElement("span");
 	close.className = "nut-close";
-	close.innerHTML = noClose ? "    " : " ⛌   ";
+	close.innerHTML = " ⛌   ";
 	close.tag = id;
-	if (!noClose) close.onclick = function () {
+	close.onclick = function () {
 		var title = this.parentNode.parentNode;
 		this.previousElementSibling.div.remove();
 		this.parentNode.remove();
-		if (this.tag == NUT.ctx.curWinid) {
+		if (this.tag == c$.winid) {
 			if (title.childNodes.length) title.childNodes[0].firstChild.onclick();
-			else NUT.ctx.curWinid = null;
+			else c$.winid = null;
 		}
 	}
 	span.appendChild(close);
@@ -390,7 +403,7 @@ function createWindowTitle(id, divTitle, noClose){
 }
 
 function linkfield_onClick(windowid,value,wherefield){
-	menu_onClick({item:{tag:windowid},tempWhere:[wherefield,"=",value]});
+	menu_onClick({ item: { tag: windowid }, object: { where: [wherefield, "=", value] } });
 	event.stopImmediatePropagation();
 }
 

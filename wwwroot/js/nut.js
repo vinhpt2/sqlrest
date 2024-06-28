@@ -1,32 +1,40 @@
-﻿var NUT = {
-	URL:"https://localhost:7006/rest/nut/nut/data/",
-	username: null,
-	ds: null,
-	onMobile : (window.orientation !== undefined),
-	ctx : {
-		user: null,
-		client: null,
-		apps: {},
-		domain: null,
-		winconfig: {},
-		extent: null,
-		layer: null,
-		curApp: null,
-		curWinid: null,
-		workflow: null
+﻿var c$ = {
+	user: null,
+	winid: null,
+	extent: null,
+	layer: null,
+	app: null,
+	workflow: null,
+	now: function () {
+		return (new Date()).toISOString().substr(0, 10);
 	},
-	
+	nowDay: function () {
+		return (new Date()).getDate();
+	},
+	nowMonth: function () {
+		return (new Date()).getMonth() + 1;
+	},
+	nowYear: function () {
+		return (new Date()).getFullYear();
+	}
+}
+var NUT = {
+	URL:"https://localhost:7006/rest/nut/nut/data/",
+	ds: null,
+	apps: {},
+	wins: {},
+	domains: {},
+	isMobile : (window.orientation !== undefined),
 	ERD:{
 		window:["windowid","windowname","windowtype","appid","execname","isopensearch"],
-		tab: ["tabid", "parenttabid", "tabname", "tablevel", "seqno", "layoutcols", "linkchildcolumn", "linkparentcolumn", "linktable", "whereclause", "orderbyclause", "tableid", "windowid", "midchildcolumn", "midparentcolumn", "midtable", "tablename", "viewname", "columnkey", "columncode", "columndisplay", "columnlock", "columnorg", "url", "servicetype", "midtable_keycolumn", "geotableid", "filterfield", "filterdefault", "beforechange", "afterchange", "isnotinsert", "isnotupdate", "isnotdelete", "isnotarchive", "isnotlock","archivetype"],
-		field:["fieldid","fieldname","alias","isdisplaygrid","isdisplay","issearch","displaylength","seqno","isreadonly","fieldlength","vformat","defaultvalue","isrequire","isunique","fieldgroup","tabid","columnid","fieldtype","foreigntable_url","columnkey","columndisplay","domainid","issearchtonghop","foreigntableid","columncode","parentfieldid","wherefieldname","displaylogic","placeholder","calculation","columntype","colspan","rowspan","isprikey","columndohoa","foreignwindowid"],
+		tab: ["tabid", "parenttabid", "tabname", "tablevel", "seqno", "layoutcols", "linkchildfield", "linkparentfield", "linktable", "whereclause", "orderbyclause", "tableid", "windowid", "midchildfield", "midparentfield", "midtable", "tablename", "viewname", "columnkey", "columncode", "columndisplay", "columnlock", "columnorg", "url", "servicetype", "midtable_prikey", "geotableid", "filterfield", "filterdefault", "beforechange", "afterchange", "isnotinsert", "isnotupdate", "isnotdelete", "isnotarchive", "isnotlock","archivetype"],
+		field: ["fieldid", "fieldname", "alias", "isdisplaygrid", "isdisplay", "issearch", "displaylength", "seqno", "isreadonly", "fieldlength", "vformat", "defaultvalue", "isrequire", "isfrozen", "fieldgroup", "tabid", "columnid", "fieldtype", "foreigntable_url", "columnkey", "columndisplay", "domainid", "issearchtonghop", "foreigntableid", "columncode", "parentfieldid", "wherefieldname", "displaylogic", "placeholder", "calculation", "columntype", "colspan", "rowspan", "isprikey", "columndohoa", "foreignwindowid"],
 		menu:["menuid","menuname","parentid","seqno","description","issummary","appid","windowid","clientid","tabid","menutype","execname","icon"]
 	},
 	I_USER:btoa("_USER"),
 	I_PASS:btoa("_PASS"),
 	LAYOUT_COLS : 3,
 	GRID_LIMIT : 100,
-
 	z: function (config) {// tag, attribute, childrens
 		var ele = (config[0] ? document.createElement(config[0]) : this);
 		if (config[1]) for (var key in config[1]) ele[key] = config[1][key];
@@ -38,16 +46,6 @@
 			if (config[0]) this.appendChild(ele);
 		}
 		return ele;
-	},
-
-	nowDay:function(){
-		return (new Date()).getDate();
-	},
-	nowMonth: function (){
-		return (new Date()).getMonth()+1;
-	},
-	nowYear: function (){
-		return (new Date()).getFullYear();
 	},
 	configDomain: function (caches){
 		var domain={};
@@ -233,7 +231,7 @@
 			window[com].run(data);
 		} else {//load component
 			var script = document.createElement("script");
-			script.src = "site/" + (com.startsWith("Com_Sys") ? "0/0/" : NUT.ctx.user.clientid + "/" + NUT.ctx.user.curApp.appid +"/") + com + ".js";
+			script.src = "site/" + (com.startsWith("Com_Sys") ? "0/0/" : c$.user.siteid + "/" + c$.app.appid +"/") + com + ".js";
 			document.head.appendChild(script);
 			script.onload = function () {
 				window[com].run(data);

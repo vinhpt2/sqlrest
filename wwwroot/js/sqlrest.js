@@ -14,7 +14,7 @@ export class SqlREST{
 		"<=":"<="
 	}
 	static decodeSql(p, notReturnLogic) {
-		var decode = p.select?"select="+p.select:"";
+		var decode = p.select?"select="+p.select+"&":"";
 		if(p.where){
 			var i0=(p.where[0]=="and"||p.where[0]=="or"?1:0);
 			var logic=i0?p.where[0]:"and";
@@ -30,7 +30,7 @@ export class SqlREST{
 						decode+=this.decodeSql({where:where},0);
 					}else{//array
 						var value=where[j0+2];
-						if(typeof(value)=="string"&&value.startsWith("NUT."))value=eval(value);
+						if(typeof(value)=="string"&&value.startsWith("c$."))value=eval(value);
 						if(typeof(value)=="string")value="'"+value+"'";
 						var clause=where[j0]+SqlREST.OPERATOR[where[j0+1]]+value;
 						if(where[j0+1]=="in"||where[j0+1]=="!in")clause+=")";
@@ -40,7 +40,7 @@ export class SqlREST{
 				if(needOpen)decode+=")";
 			}else{//array
 				var value=p.where[i0+2];
-				if(typeof(value)=="string"&&value.startsWith("NUT."))value=eval(value);
+				if(typeof(value)=="string"&&value.startsWith("c$."))value=eval(value);
 				if(typeof(value)=="string")value="'"+value+"'";
 				decode+=p.where[i0]+SqlREST.OPERATOR[p.where[i0+1]]+value;
 				if(p.where[i0+1]=="in"||p.where[i0+1]=="!in")decode+=")";
