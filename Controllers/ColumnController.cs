@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
 using System;
@@ -6,6 +7,7 @@ using System.Collections;
 
 namespace SQLRestC.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route(Global.ROOT+ "{database}/{schema}/column/{table}")]
     public class ColumnController : ControllerBase

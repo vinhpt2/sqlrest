@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
@@ -7,6 +8,7 @@ using System.Text.Json.Nodes;
 
 namespace SQLRestC.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route(Global.ROOT+"database")]
     public class DatabaseController : ControllerBase

@@ -236,6 +236,7 @@ export class NWin {
 		var grid = (w2ui[divGrid.id] || new w2grid({
 			name: divGrid.id,
 			dataType: "RESTFULL",
+			httpHeaders: {Authorization:"Bearer "+n$.user.token},
 			limit: NUT.GRID_LIMIT,
 			reorderColumns: true,
 			recid: conf.columnkey,

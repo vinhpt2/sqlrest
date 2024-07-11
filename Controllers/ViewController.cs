@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
@@ -6,6 +7,7 @@ using System.IO;
 
 namespace SQLRestC.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route(Global.ROOT+"{database}/{schema}/view")]
     public class ViewController : ControllerBase

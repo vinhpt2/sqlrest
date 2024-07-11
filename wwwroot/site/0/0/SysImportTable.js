@@ -107,11 +107,6 @@ var SysImportTable={
 							"⛌ Close":function(){
 								w2popup.close();
 							},
-							"➕ Add miss-columns":function(){
-								for(key in lookup)if(lookup.hasOwnProperty(key)){
-									self.addMissColumn(lookup[key],definitions[key]);
-								}
-							},
 							"✔️ Import":function(){
 								var change=this.getChanges();
 								for(key in change)if(change.hasOwnProperty(key)){

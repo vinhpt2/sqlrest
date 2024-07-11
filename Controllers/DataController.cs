@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
@@ -11,6 +12,7 @@ using System.Text.Json;
 
 namespace SQLRestC.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route(Global.ROOT + "{database}/{schema}/data/{table}")]
     public class DataController : ControllerBase
@@ -47,8 +49,6 @@ namespace SQLRestC.Controllers
                         using (var ds = db.ExecuteWithResults(sql))
                         {
                             var tbl = ds.Tables[0];
-                            if (tbl != null)
-                            {
                                 var rs = new Dictionary<String, Object>[tbl.Rows.Count];
                                 for (int r = 0; r < rs.Length; r++)
                                 {
@@ -62,8 +62,6 @@ namespace SQLRestC.Controllers
                                 }
                                 response.result = rs;
                                 if (limit != 0) response.total = (int)ds.Tables[1].Rows[0][0];
-                            }
-                            else response.result = new object[0];//Empty
                         }
                     }
                     else response.result = "SQL INJECTION FOUND! Not safe to executes.";
@@ -112,8 +110,6 @@ namespace SQLRestC.Controllers
                                 using (var ds = db.ExecuteWithResults(sql))
                                 {
                                     var tbl = ds.Tables[0];
-                                    if (tbl != null)
-                                    {
                                         var rs = new Dictionary<String, Object>[tbl.Rows.Count];
                                         for (int r = 0; r < rs.Length; r++)
                                         {
@@ -126,8 +122,6 @@ namespace SQLRestC.Controllers
                                             rs[r] = rec;
                                         }
                                         response.result = rs;
-                                    }
-                                    else response.result = new object[0];//Empty
                                 }
                             }
                             else response.result = "SQL INJECTION FOUND! Not safe to executes.";

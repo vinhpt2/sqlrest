@@ -1,5 +1,6 @@
 export class SqlREST{
-	static OPERATOR={
+	static token = null;
+	static OPERATOR = {
 		"is":" is ",
 		"!is":" not is ",
 		"like":" like ",
@@ -54,6 +55,23 @@ export class SqlREST{
 		if (p.orderby) decode += "&orderby=" + p.orderby;
 		return decode;
 	}
+
+	static login(p, onok) {
+		var xhr = new XMLHttpRequest();
+		xhr.onreadystatechange = function () {
+			if (this.readyState == XMLHttpRequest.DONE) {
+				if (this.status == 0 || (this.status >= 200 && this.status < 400))
+					onok(JSON.parse(this.response));
+				else
+					this.onerror(this.response);
+			}
+		};
+		xhr.onerror = this.onerror;
+		xhr.open("POST", p.url, true);
+		xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+		xhr.send(JSON.stringify(p.data));
+	}
+
 	static select(p,onok){
 		var xhr=new XMLHttpRequest();
 		xhr.onreadystatechange=function(){
@@ -65,7 +83,8 @@ export class SqlREST{
 			}
 		};
 		xhr.onerror = this.onerror;
-		xhr.open("GET",p.url+(p.id?"/"+p.id:"?where="+this.decodeSql(p)),true);
+		xhr.open("GET", p.url + (p.id ? "/" + p.id : "?where=" + this.decodeSql(p)), true);
+		if (this.token) xhr.setRequestHeader("Authorization", this.token);
 		xhr.send();7
 	}
 	static toCsv(data){
@@ -96,7 +115,8 @@ export class SqlREST{
 		};
 		xhr.onerror=this.onerror;
 		xhr.open("POST",p.returnid?p.url+"?returnid=true":p.url,true);
-		xhr.setRequestHeader("Content-Type","application/json;charset=UTF-8");
+		xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+		if (this.token) xhr.setRequestHeader("Authorization", this.token);
 		xhr.send(JSON.stringify(Array.isArray(p.data)?p.data:[p.data]));
 	}
 	static insertCsv(p,onok){
@@ -127,7 +147,8 @@ export class SqlREST{
 		if (p.where) p.url += "?where=" + this.decodeSql(p);
 		xhr.onerror = this.onerror;
 		xhr.open("PUT",p.url,true);
-		xhr.setRequestHeader("Content-Type","application/json;charset=UTF-8");
+		xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+		if (this.token) xhr.setRequestHeader("Authorization", this.token);
 		xhr.send(JSON.stringify(p.where?p.data:[p.data]));
 	}
 	static upsert(p,onok){
@@ -158,6 +179,7 @@ export class SqlREST{
 		};
 		xhr.onerror=this.onerror;
 		xhr.open("DELETE", p.url + "?where=" + this.decodeSql(p), true);
+		if (this.token) xhr.setRequestHeader("Authorization", this.token);
 		xhr.send();
 	}
 	static call(p,onok){
@@ -172,8 +194,8 @@ export class SqlREST{
 		};
 		xhr.onerror=this.onerror;
 		xhr.open(p.method||"GET",p.url,true);
-
-		xhr.setRequestHeader("Content-Type","application/json;charset=UTF-8");
+		xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+		if (this.token) xhr.setRequestHeader("Authorization", this.token);
 		p.data?xhr.send(JSON.stringify(p.data)):xhr.send();
 	}
 

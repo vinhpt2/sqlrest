@@ -1,5 +1,6 @@
 ﻿using Azure;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.SqlServer.Management.Smo;
 using Microsoft.SqlServer.Management.XEvent;
 using Newtonsoft.Json.Linq;
@@ -7,7 +8,10 @@ using SQLRestC.Controllers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace SQLRestC
 {
@@ -15,6 +19,7 @@ namespace SQLRestC
         public static String server;
         public static String username;
         public static String password;
+        public static String jwtkey;
         public const String ROOT = "rest/";
         public const String MS_PATH = "MS_Path";
         public const String MS_DESCRIPTION = "MS_Description";

@@ -20,7 +20,8 @@
 	}
 }
 var NUT = {
-	URL: "https://localhost:7006/rest/nut/nut/data/",
+	URL: "https://localhost:7006/rest/nut/dbo/data/",
+	URL_TOKEN: "https://localhost:7006/rest/token/nut",
 	ds: null,
 	apps: {},
 	wins: {},
