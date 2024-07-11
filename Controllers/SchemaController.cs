@@ -12,7 +12,7 @@ namespace SQLRestC.Controllers
     {
         //list all Schema info
         [HttpGet]
-        public ResponseJson Gets(String database, bool isSystem=false)
+        public ResponseJson GetAll(String database, bool detail = false, bool system=false)
         {
             Server server = null;
             try
@@ -22,20 +22,7 @@ namespace SQLRestC.Controllers
                 var response = new ResponseJson { success = (db != null) };
                 if (response.success)
                 {
-                    var jsonArr = new List<SchemaJson>();
-                    foreach (Schema obj in db.Schemas)
-                    {
-                        if (obj.IsSystemObject == isSystem)
-                        {
-                            jsonArr.Add(new SchemaJson
-                            {
-                                id = obj.ID,
-                                name = obj.Name,
-                                owner = obj.Owner
-                            });
-                        }
-                    }
-                    response.result = jsonArr;
+                    response.result = Global.getSchemaInfo(db, detail, system);
                 } else response.result = "Database '" + database + "' not found!";
                 return response;
 
@@ -53,7 +40,7 @@ namespace SQLRestC.Controllers
 
         //get Schema info by name
         [HttpGet("{name}")]
-        public ResponseJson Get(String database, String name)
+        public ResponseJson Get(String database, String name,bool detail = false)
         {
             Server server = null;
             try
@@ -71,9 +58,10 @@ namespace SQLRestC.Controllers
                         {
                             id = obj.ID,
                             name = obj.Name,
-                            owner = obj.Owner
+                            owner = obj.Owner,
+                            tables = detail ? Global.getTableInfo(db, obj.Name, obj.IsSystemObject) : null,
+                            views = detail ? Global.getViewInfo(db, obj.Name, obj.IsSystemObject) : null
                         };
-
                     }
                     else response.result = "Schema '" + database+"."+name + "' not found!";
                 }

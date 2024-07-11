@@ -1,4 +1,4 @@
-var Com_SysAssignUserRole={
+var SysAssignUserRole={
 	run:function(p){
 		if(p.records.length){
 			this.app=p.records[0];
@@ -55,7 +55,7 @@ var Com_SysAssignUserRole={
 				appid:this.app.appid,
 				roleid:roleid,
 				userid:this.user.userid,
-				clientid:_context.user.clientid
+				siteid:_context.user.siteid
 			};
 			NUT.ds.insert({url:NUT.URL+"sysaccess",data:data},function(res){
 				if(res.length)NUT.tagMsg("Record inserted.","lime");

@@ -31,7 +31,7 @@
 var _app=parent.Com_SysApplicationWizard.app;
 var _row=null;
 function body_onLoad(){
-	parent.NUT.ds.select({url:parent.NUT.URL+"sysrole",where:["clientid","=",_app.clientid]},function(res){
+	parent.NUT.ds.select({url:parent.NUT.URL+"sysrole",where:["siteid","=",_app.siteid]},function(res){
 		for(var i=0;i<res.length;i++){
 			var row=tblRole.insertRow();
 			row.className="line";
@@ -41,7 +41,7 @@ function body_onLoad(){
 			if(i==0)row.onclick();
 		}
 	});
-	parent.NUT.ds.select({url:parent.NUT.URL+"sysuser",where:["clientid","=",_app.clientid]},function(res){
+	parent.NUT.ds.select({url:parent.NUT.URL+"sysuser",where:["siteid","=",_app.siteid]},function(res){
 		for(var i=0;i<res.length;i++){
 			var row=tblUser.insertRow();
 			row.className="line";

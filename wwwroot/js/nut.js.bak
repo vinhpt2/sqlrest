@@ -7,7 +7,7 @@ export class NUT{
 		window:["windowid","windowname","windowtype","appid","execname","isopensearch"],
 		tab:["tabid","parenttabid","tabname","tablevel","seqno","layoutcolumn","truonglienketcon","truonglienketcha","whereclause","orderbyclause","tableid","windowid","truongtrunggiancon","truongtrunggiancha","banglienket","bangtrunggian","tablename","columnkey","urledit","servicetype","columnparent","columnkeytrunggian","geotableid","filterfield","filterdefaultvalue","onchange","isnotinsert","isnotupdate","isnotdelete","columncode","columndisplay","archive","beforechange","lock","isnotarchive","isnotlock"],
 		field:["fieldid","fieldname","alias","isdisplaygrid","isdisplay","issearch","displaylength","seqno","isreadonly","fieldlength","vformat","defaultvalue","isrequire","isunique","fieldgroup","tabid","columnid","fieldtype","foreigntable","columnkey","columndisplay","isfromdomain","domainid","issearchtonghop","foreigntableid","columncode","parentfieldid","wherefieldname","displaylogic","placeholder","calculation","columntype","colspan","rowspan","isprikey","columndohoa","foreignwindowid"],
-		menuitem:["menuitemid","menuitemname","parentid","seqno","description","issummary","appid","windowid","clientid","tabid","menuitemtype","execname","icon"]
+		menuitem:["menuitemid","menuitemname","parentid","seqno","description","issummary","appid","windowid","siteid","tabid","menuitemtype","execname","icon"]
 	}
 	static I_USER=btoa("_USER");
 	static I_PASS=btoa("_PASS");

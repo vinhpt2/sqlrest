@@ -1,4 +1,4 @@
-var Com_SysCacheDomain={
+var SysCacheDomain={
 	run:function(p){
 		if(p.records.length){
 			this.service=p.records[0];
@@ -53,7 +53,7 @@ var Com_SysCacheDomain={
 			var domains=[];
 			for(var i=0;i<res.length;i++)domains.push([res[i][table.columnkey],res[i][table.columndisplay]]);
 			var data={
-				clientid:_context.user.clientid,
+				siteid:_context.user.siteid,
 				//appid:_context.curApp.appid,
 				domainname:table.tablename,
 				domain:JSON.stringify(domains)

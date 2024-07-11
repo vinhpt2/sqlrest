@@ -12,7 +12,7 @@ namespace SQLRestC.Controllers
     {
         //list all Table info
         [HttpGet]
-        public ResponseJson Gets(String database, String schema, String table)
+        public ResponseJson GetAll(String database, String schema, String table)
         {
             Server server = null;
             try
@@ -22,34 +22,18 @@ namespace SQLRestC.Controllers
                 var response = new ResponseJson { success = (db != null) };
                 if (response.success)
                 {
-                    var tb = db.Tables[table, schema];
-                    response.success = (tb!=null);
+                    var tb = db.Tables[(String)table, schema];
+                    View vw = null;
+                    if (tb == null) vw = db.Views[table, schema];
+                    response.success = (tb != null || vw != null);
                     if (response.success)
                     {
-                        var jsonArr = new List<ColumnJson>();
-                        foreach (Column obj in tb.Columns)
-                        {
-                            jsonArr.Add(new ColumnJson
-                            {
-                                id = obj.ID,
-                                name = obj.Name,
-                                dataType = obj.DataType.Name,
-                                length = (obj.DataType.IsNumericType? obj.DataType.NumericScale:obj.DataType.MaximumLength),
-                                precision = obj.DataType.NumericPrecision,
-                                nullable=obj.Nullable,
-                                inPrimaryKey=obj.InPrimaryKey,
-                                identity=obj.Identity,
-                                defaultValue=obj.Default,
-                                description = obj.ExtendedProperties.Contains(Global.MS_DESCRIPTION) ? (String)obj.ExtendedProperties[Global.MS_DESCRIPTION].Value : null
-                            });
-                        }
-                        response.result = jsonArr;
+                        response.result = Global.getColumnInfo(tb!=null?tb.Columns:vw.Columns);
                     }
-                    else response.result = "Table '" + database + "." + schema+"."+table + "' not found!";
+                    else response.result = "Table/View '" + database + "." + schema + "." + table + "' not found!";
                 }
                 else response.result = "Database '" + database + "' not found!";
                 return response;
-
             }
             catch (Exception ex)
             {
@@ -74,11 +58,13 @@ namespace SQLRestC.Controllers
                 var response = new ResponseJson { success = (db != null) };
                 if (response.success)
                 {
-                    var tb = db.Tables[table, schema];
-                    response.success = (tb != null);
+                    var tb = db.Tables[(String)table, schema];
+                    View vw = null;
+                    if (tb == null) vw = db.Views[table, schema];
+                    response.success = (tb != null || vw != null);
                     if (response.success)
                     {
-                        var obj = tb.Columns[name];
+                        var obj = (tb != null ? tb.Columns[name] : vw.Columns[name]);
                         response.success = (obj != null);
                         if (response.success)
                         {
@@ -96,9 +82,9 @@ namespace SQLRestC.Controllers
                                 description = obj.ExtendedProperties.Contains(Global.MS_DESCRIPTION) ? (String)obj.ExtendedProperties[Global.MS_DESCRIPTION].Value : null
                             };
                         }
-                        else response.result = "Column '" + database + "." + schema + "."+table + "." + name + "' not found!";
+                        else response.result = "Column '" + database + "." + schema + "." + table + "." + name + "' not found!";
                     }
-                    else response.result = "Table '" + database + "." + schema + "." + table + "' not found!";
+                    else response.result = "Table/View '" + database + "." + schema + "." + table + "' not found!";
                 }
                 else response.result = "Database '" + database + "' not found!";
                 return response;

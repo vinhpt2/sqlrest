@@ -7,25 +7,25 @@ using System.IO;
 namespace SQLRestC.Controllers
 {
     [ApiController]
-    [Route(Global.ROOT+"{database}/{schema}/table")]
-    public class TableController : ControllerBase
+    [Route(Global.ROOT+"{database}/{schema}/view")]
+    public class ViewController : ControllerBase
     {
         //list all Table info
         [HttpGet]
-        public ResponseJson GetAll(String database, String schema, bool detail = false)
+        public ResponseJson GetAll(String database, String schema,bool detail = false)
         {
             Server server = null;
             try
             {
                 server = new Server(new ServerConnection(Global.server, Global.username, Global.password));
-                var db = server.Databases[database];
+                var db = server.Databases[(String)database];
                 var response = new ResponseJson { success = (db != null) };
                 if (response.success)
                 {
                     response.success= db.Schemas.Contains(schema);
                     if (response.success)
                     {
-                        response.result = Global.getTableInfo(db,schema, detail);
+                        response.result = Global.getViewInfo(db,schema, detail);
                     }else response.result = "Schema '" + database+"."+schema + "' not found!";
                 } else response.result = "Database '" + database + "' not found!";
                 return response;
@@ -50,28 +50,26 @@ namespace SQLRestC.Controllers
             try
             {
                 server = new Server(new ServerConnection(Global.server, Global.username, Global.password));
-                var db = server.Databases[database];
+                var db = server.Databases[(String)database];
                 var response = new ResponseJson { success = (db != null) };
                 if (response.success)
                 {
                     response.success = db.Schemas.Contains(schema);
                     if (response.success)
                     {
-                        var obj = db.Tables[name, schema];
+                        var obj = db.Views[name, schema];
                         response.success=(obj!=null);
                         if (response.success)
                         {
-                            response.result = new TableJson
+                            response.result = new ViewJson
                             {
                                 id = obj.ID,
                                 name = obj.Name,
-                                dataUsage = obj.DataSpaceUsed,
-                                indexUsage = obj.IndexSpaceUsed,
                                 columns = (detail ? Global.getColumnInfo(obj.Columns) : null),
                                 path = obj.ExtendedProperties.Contains(Global.MS_PATH) ? (String)obj.ExtendedProperties[Global.MS_PATH].Value : null
                             };
                         }
-                        else response.result = "Table '" + database + "."+schema + "." + name + "' not found!";
+                        else response.result = "View '" + database + "."+schema + "." + name + "' not found!";
                     }
                     else response.result = "Schema '" + database+"."+name + "' not found!";
                 }
@@ -89,9 +87,9 @@ namespace SQLRestC.Controllers
 
         }
 
-        //create Table
+        //create View
         [HttpPost("{name}")]
-        public ResponseJson Create(String database,String schema, String name, List<ColumnJson> columns, String path=null)
+        public ResponseJson Create(String database,String schema, String name, String sql, String path=null)
         {
             Server server = null;
             try
@@ -101,14 +99,12 @@ namespace SQLRestC.Controllers
                 var response = new ResponseJson { success = (db != null) };
                 if (response.success)
                 {
-                    response.success = !db.Tables.Contains(name,schema);
+                    response.success = !db.Views.Contains(name,schema);
                     if (response.success)
                     {
-                        var obj = new Table(db, name,schema);
-                        foreach (var col in columns)
-                        {
-                            obj.Columns.Add(Global.makeColumn(col,obj));
-                        }
+                        var obj = new View(db, name,schema);
+                        //obj.TextHeader = "CREATE VIEW " + schema + "." + name+" AS";
+                        obj.TextBody = sql;
                         obj.Create();
                         if (!String.IsNullOrEmpty(path))
                         {
@@ -116,7 +112,7 @@ namespace SQLRestC.Controllers
                         }
                         response.result = obj.ID;
                     }
-                    else response.result = "Table '" + database + "."+schema+"." + name + "' already exists!";
+                    else response.result = "View '" + database + "."+schema+"." + name + "' already exists!";
                 }
                 else response.result = "Database '" + database + "' not found!";
                 return response;
@@ -131,7 +127,7 @@ namespace SQLRestC.Controllers
             }
         }
 
-        //rename Table
+        //rename View
         [HttpPut("{name}")]
         public ResponseJson Rename(String database, String schema, String name, String newName, String newPath=null)
         {
@@ -143,7 +139,7 @@ namespace SQLRestC.Controllers
                 var response = new ResponseJson { success = (db != null) };
                 if (response.success)
                 {
-                    var obj = db.Tables[name,schema];
+                    var obj = db.Views[name,schema];
                     response.success = (obj != null);
                     if (response.success)
                     {
@@ -157,7 +153,7 @@ namespace SQLRestC.Controllers
                                 prop.Value = newPath;
                         }
                     }
-                    else response.result = "Table '" + database+ "." +schema+ "." + name + "' not found!";
+                    else response.result = "View '" + database+ "." +schema+ "." + name + "' not found!";
                 }
                 else response.result = "Database '" + database + "' not found!";
                 return response;
@@ -172,7 +168,7 @@ namespace SQLRestC.Controllers
             }
         }
 
-        //drop Table
+        //drop View
         [HttpDelete("{name}")]
         public ResponseJson Drop(String database, String schema, String name)
         {
@@ -184,13 +180,13 @@ namespace SQLRestC.Controllers
                 var response = new ResponseJson { success = (db != null) };
                 if (response.success)
                 {
-                    var obj = db.Tables[name,schema];
+                    var obj = db.Views[name,schema];
                     response.success = (obj != null);
                     if (response.success)
                     {
                         obj.Drop();
                     }
-                    else response.result = "Table '" + database+"."+schema + "." + name + "' not found!";
+                    else response.result = "View '" + database+"."+schema + "." + name + "' not found!";
                 }
                 else response.result = "Database '" + database + "' not found!";
                 return response;

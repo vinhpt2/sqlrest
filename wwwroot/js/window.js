@@ -19,7 +19,7 @@ export class NWin {
 				divTab.id="tab_"+tabconf.tabid;
 				divTab.style.height=(tabconf.maxLevel?"50%":"100%");
 				div.appendChild(divTab);
-				var tab={id:tabconf.tabid,text:tabconf.tabname,tag:tabconf,callback:callback};
+				var tab = { id: tabconf.tabid, text: NUT.translate(tabconf.translate)||tabconf.tabname,tag:tabconf,callback:callback};
 				this.buildContent(divTab,tab);
 				if(tabconf.tabs.length)for(var l=tabLevel+1;l<=tabconf.maxLevel;l++)
 					this.buildWindow(divTab,tabconf,l,callback);
@@ -37,7 +37,7 @@ export class NWin {
 	}
 	cacheDomainAndOpenWindow(div, conf, needCaches, index) {
 		var fldconf = needCaches[index];
-		if (fldconf) NUT.ds.select({ url: fldconf.foreigntable_url, select: [fldconf.columnkey, fldconf.columndisplay], where: JSON.parse(fldconf.whereclause) }, function (res) {
+		if (fldconf) NUT.ds.select({ url: conf.url+fldconf.foreigntable, select: [fldconf.columnkey, fldconf.columndisplay], where: JSON.parse(fldconf.whereclause) }, function (res) {
 			if (res.success) {
 				var domain = { items: [], lookup: {} };
 				for (var i = 0; i < res.length; i++) {
@@ -69,10 +69,11 @@ export class NWin {
 		var group=null,colGroup=null;
 		var fields=[],columns=[],searches=[], index=0;
 		for(var i=0;i<conf.fields.length;i++){
-			var fldconf=conf.fields[i];
+			var fldconf = conf.fields[i];
+			var alias = NUT.translate(fldconf.translate) || fldconf.fieldname;
 			if(!fldconf.isprimarykey){
-				if(fldconf.fieldname=="clientid")conf.default.clientid=c$.user.clientid;
-				if(fldconf.fieldname=="appid")conf.default.appid=c$.app.appid;
+				if(fldconf.columnname=="siteid")conf.default.siteid=n$.user.siteid;
+				if (fldconf.columnname =="appid")conf.default.appid=n$.app.appid;
 			}		
 			var domain=null;
 			if(fldconf.fieldtype=="select"){
@@ -80,12 +81,12 @@ export class NWin {
 				domain=NUT.domains[key];
 			}
 			if(fldconf.isdisplaygrid){
-				var column={field:fldconf.fieldname,text:fldconf.alias,size:"100px", sortable:true,frozen:fldconf.isfrozen,options:{conf:fldconf}};
+				var column = { field: fldconf.columnname, text: alias,size:"100px", sortable:true,frozen:fldconf.isfrozen,options:{conf:fldconf}};
 				if(fldconf.fieldtype=="int"||fldconf.fieldtype=="number"||fldconf.fieldtype=="currency"||fldconf.fieldtype=="date"||fldconf.fieldtype=="datetime"||fldconf.fieldtype=="percent")column.render=fldconf.fieldtype;
 				if(fldconf.foreigNWindowid){
 					column.render=function(record,index,column_index){					
 						var conf=this.columns[column_index].options.conf;
-						return "<a class='nut-link' onclick='linkfield_onClick("+conf.foreigNWindowid+",\""+record[conf.fieldname]+"\",\""+conf.whereclause+"\")'>"+record[conf.fieldname]+"</a>";
+						return "<a class='nut-link' onclick=`linkfield_onClick(" + conf.foreigNWindowid + ",'" + record[conf.columnname] + "','" + conf.whereclause + "')`>" + record[conf.columnname]+"</a>";
 					}
 				}
 				if(!fldconf.isreadonly){
@@ -104,7 +105,7 @@ export class NWin {
 			}
 
 			if(fldconf.isdisplay){
-				var field = { field: fldconf.fieldname, type: fldconf.fieldtype, required: fldconf.isrequire, disabled:fldconf.isreadonly, html:{label:fldconf.foreigNWindowid?"<a class='nut-link' onclick='linkfield_onClick("+fldconf.foreigNWindowid+","+fldconf.fieldname+".value,\""+fldconf.whereclause+"\")'>"+fldconf.alias+"</a>":fldconf.alias,column:index++%conf.layoutcols,attr:"tabindex=0"},options:{conf:fldconf}};
+				var field = { field: fldconf.columnname, type: fldconf.fieldtype, required: fldconf.isrequire, disabled: fldconf.isreadonly, html: { label: fldconf.foreigNWindowid ? "<a class='nut-link' onclick=`linkfield_onClick(" + fldconf.foreigNWindowid + "," + fldconf.columnname +".value,'"+fldconf.whereclause+"')`>"+alias+"</a>":alias,column:index++%conf.layoutcols,attr:"tabindex=0"},options:{conf:fldconf}};
 				if(domain){field.options.items=domain.items;field.options.showNone=true};
 				if(fldconf.placeholder)field.html.attr+=" placeholder='"+fldconf.placeholder+"'";
 				if(fldconf.displaylength)field.html.attr+=" style='width:"+fldconf.displaylength+"px'";
@@ -121,7 +122,7 @@ export class NWin {
 						field.html.column=colGroup;
 					}
 				}
-				if(fldconf.defaultvalue)conf.default[fldconf.fieldname]=fldconf.defaultvalue.startsWith("NUT.")?eval(fldconf.defaultvalue):fldconf.defaultvalue;
+				if (fldconf.defaultvalue) conf.default[fldconf.columnname]=fldconf.defaultvalue.startsWith("NUT.")?eval(fldconf.defaultvalue):fldconf.defaultvalue;
 				if(fldconf.issearch)searches.push(field);
 				
 				fields.push(field);
@@ -144,17 +145,17 @@ export class NWin {
 		divContent.appendChild(divGrid);
 
 		var isArchive=!conf.isnotarchive&&conf.archive;
-		var items = [{ type: 'button', id: "SWIT", text: '⧉', tooltip: "Form/Grid" },
-			{ type: 'button', id: "RELOAD", text: '↻', tooltip: "Reload" },
+		var items = [{ type: 'button', id: "SWIT", text: '⧉', tooltip: "_Form/Grid" },
+			{ type: 'button', id: "RELOAD", text: '↻', tooltip: "_Reload" },
 			{type:'break'},
-			{type:'button',id:"FIND",text:'🔎',hidden:searches.length==0,tooltip:"Find"},
-			{type:'button',id:"NEW",text:'📄',hidden:conf.isnotinsert,tooltip:"Add New"},
-			{type:(isArchive?"menu":"button"),id:(isArchive?"save":"SAVE"),text:'💾',hidden:conf.isnotupdate,tooltip:"Save Edit",items:[{id:"SAVE",text:"Save"},{id:"SAVE_A",text:"Archive & Save"}]},
-			{type:(isArchive?"menu":"button"),id:(isArchive?"del":"DEL"),text:'❌',hidden:conf.isnotdelete,tooltip:"Delete",items:[{id:"DEL",text:"Delete"},{id:"DEL_A",text:"Archive & Delete"}]},
+			{type:'button',id:"FIND",text:'🔎',hidden:searches.length==0,tooltip:"_Find"},
+			{type:'button',id:"NEW",text:'📄',hidden:conf.isnotinsert,tooltip:"_Add New"},
+			{type:(isArchive?"menu":"button"),id:(isArchive?"save":"SAVE"),text:'💾',hidden:conf.isnotupdate,tooltip:"_Save Edit",items:[{id:"SAVE",text:"_Save"},{id:"SAVE_A",text:"_Archive & Save"}]},
+			{type:(isArchive?"menu":"button"),id:(isArchive?"del":"DEL"),text:'❌',hidden:conf.isnotdelete,tooltip:"_Delete",items:[{id:"DEL",text:"_Delete"},{id:"DEL_A",text:"_Archive & Delete"}]},
 			{type:'break'}];
 
-		if(!conf.isnotlock&&conf.lock)items.push({type:'button',id:"LOCK",text:'🔒',tooltip:"Lock/Unlock"});
-		if(isArchive)items.push({type:'button',id:"ARCH",text:'🕰️',tooltip:"Archive"});
+		if(!conf.isnotlock&&conf.lock)items.push({type:'button',id:"LOCK",text:'🔒',tooltip:"_Lock/Unlock"});
+		if(isArchive)items.push({type:'button',id:"ARCH",text:'🕰️',tooltip:"_Archive"});
 		//if(conf.columnparent)items.push({type:'button',id:"TREE",text:'🎛️',tooltip:"Tree view"});
 		if(conf.filterfield){
 			var filterfields=JSON.parse(conf.filterfield);
@@ -176,7 +177,7 @@ export class NWin {
 				var field=null;
 				for(var i=0;i<conf.fields.length;i++){
 					field=conf.fields[i];
-					var key=field.fieldname;
+					var key = field.columnname;
 					if(lookupfilter[key]){
 						var values=[{id:"FILTER",text:"-All-",tag:[key,"ALL"]}];
 						if(field.domainid){
@@ -205,15 +206,15 @@ export class NWin {
 			lookup[menu.menuid]=item;
 		}
 
-		var items2=[{type:'button',id:"XLS_IM",text:'📥',tooltip:"Import .xls"},
-					{type:'button',id:"XLS_EX",text:'📤',tooltip:"Export .xls"},
+		var items2=[{type:'button',id:"XLS_IM",text:'📥',tooltip:"_Import .xls"},
+					{type:'button',id:"XLS_EX",text:'📤',tooltip:"_Export .xls"},
 					{type:'break'},
-			{ type: 'button', id: "PREV", text:'🡄',tooltip:"Previous",tag:-1},
-			{ type: 'button', id: "NEXT", text:'🡆',tooltip:"Next",tag:+1},
+			{ type: 'button', id: "PREV", text:'🡄',tooltip:"_Previous",tag:-1},
+			{ type: 'button', id: "NEXT", text:'🡆',tooltip:"_Next",tag:+1},
 			{ type: 'html', id: "STUT", html: "<div style='padding:6px'><span id='rec_" + conf.tabid +"'></span>/<span id='total_"+conf.tabid+"'></span></div>"},
 					{ type: 'break' },
-			{ type: 'check', id: "EXPD", text: "»", tooltip: "Expand/Collapse" },
-			{ type: 'check', id: "CONF", text: "⋮", tooltip: "Config Columns" }];
+			{ type: 'check', id: "EXPD", text: "»", tooltip: "_Expand/Collapse" },
+			{ type: 'check', id: "CONF", text: "⋮", tooltip: "_Config Columns" }];
 		//toolbar
 		(w2ui[divTool.id]||new w2toolbar({
 			name: divTool.id,
@@ -284,11 +285,11 @@ export class NWin {
 				//grid.searchOpen(evt.originalEvent.target);
 				var id="find_"+tab.id;
 				w2popup.open({
-					title:"🔎 <i>Find</i> - "+conf.tabname,
+					title:"_Find",
 					modal:true,
 					width: 920,
 					body: '<div id="'+id+'" class="nut-full"></div>',
-					onClose(evt){c$.idFormPopup=null},
+					onClose(evt){n$.idFormPopup=null},
 					onOpen(evt){
 						evt.onComplete=function(){
 							var div=document.getElementById(id);
@@ -317,7 +318,7 @@ export class NWin {
 									}
 								}
 							})).render(div);
-							c$.idFormPopup=id;
+							n$.idFormPopup=id;
 						}
 					}
 				});
@@ -329,12 +330,12 @@ export class NWin {
 				if(conf.parenttabid&&!conf.bangtrunggian)conf.default[conf.truonglienketcon]=grid.parentRecord[conf.truonglienketcha];
 				var id="new_"+tab.id;
 				w2popup.open({
-					title:"📄 <i>New</i> - "+conf.tabname,
+					title:"_New",
 					modal:true,
 					width: 920,
 					height: 610,
 					body: '<div id="'+id+'" class="nut-full"></div>',
-					onClose(evt){c$.idFormPopup=null},
+					onClose(evt){n$.idFormPopup=null},
 					onOpen(evt){
 						evt.onComplete=function(){
 							var div=document.getElementById(id);
@@ -359,33 +360,34 @@ export class NWin {
 												this.record[conf.truonglienketcon]=parentKey;
 											}
 										}
-										var self=this;
-										var data={};//remove "" value
-										for(var key in this.record)if(this.record.hasOwnProperty(key)&&this.record[key]!=="")
+										var data={};//remove null value
+										for(var key in this.record)if(this.record.hasOwnProperty(key)&&this.record[key]!==null)
 											data[key]=this.record[key];
 										if(conf.beforechange){
 											if(conf.onchange)NUT.runComponent(conf.onchange,{action:item.id,data:data,config:conf});
-										}else NUT.ds.insert({url:conf.urledit,data:data},function(res){
+										}else NUT.ds.insert({url:conf.url+conf.tablename,data:data,returnid:true},function(res){
 											if(res.success){
 												NUT.notify("ℹ️ Record inserted.","lime");
-												grid.add(res[0],true);
-												grid.select(res[0][grid.recid]);
+												var newid=res.result[0];
+												data[conf.columnkey]=newid;
+												grid.add(data,true);
+												//grid.select(newid);
 												if(recTrungGian){
-													recTrungGian[conf.truongtrunggiancon]=res[0][conf.truonglienketcon];
-													NUT.ds.insert({url:conf.bangtrunggian,data:recTrungGian},function(res2){
+													recTrungGian[conf.midchildfiled]=data[conf.linkchildfield];
+													NUT.ds.insert({url:conf.url+conf.midtable,data:recTrungGian},function(res2){
 														if (res2.success)
 															NUT.notify("ℹ️ Record inserted.","lime");
 														else
 															NUT.notify("⛔ ERROR: " + res2.result, "red");
 													});
 												}
-												if(conf.onchange)NUT.runComponent(conf.onchange,{action:item.id,data:res[0],config:conf});
+												if(conf.onchange)NUT.runComponent(conf.onchange,{action:item.id,data:data,config:conf});
 											} else NUT.notify("⛔ ERROR: " + res.result, "red");
 										});
 									}
 								}
 							})).render(div);
-							c$.idFormPopup=id;
+							n$.idFormPopup=id;
 						}
 					}
 				});
@@ -416,7 +418,7 @@ export class NWin {
 								var p = {url:conf.url+conf.tablename,where:[columnkey,"=",recid],data:data};
 								NUT.ds.update(p, function (res) {
 									if (res.success) {
-										if (timeArchive) archiveRecord(conf.urledit.substr(0, conf.urledit.lastIndexOf("/")), item.id, data, recid, conf.tableid, timeArchive);
+										if (timeArchive) archiveRecord(conf.url, item.id, data, recid, conf.tableid, timeArchive);
 										if (tab.isForm) grid.set(recid, data);
 										NUT.notify("ℹ️ Record updated.","lime");
 
@@ -441,10 +443,9 @@ export class NWin {
 						 if (conf.beforechange) {
 							 if (conf.onchange) NUT.runComponent(conf.onchange, { action: item.id, recid: recid, config: conf });
 						 } else {
-							 var tagNode = "#tb_divtool_" + tab.id + "_item_SPACE";
 							 if (recid) NUT.ds.delete({ url: conf.url + conf.tablename, where: [conf.columnkey, "=", recid] }, function (res) {
 								 if (res.success) {
-									 if (timeArchive) archiveRecord(conf.urledit.substr(0, conf.urledit.lastIndexOf("/")), item.id, tab.isForm ? form.record : grid.get(recid), recid, conf.tableid, timeArchive);
+									 if (timeArchive) archiveRecord(conf.url, item.id, tab.isForm ? form.record : grid.get(recid), recid, conf.tableid, timeArchive);
 									 grid.remove(recid);
 									 NUT.notify("ℹ️ 1 record deleted.", "lime");
 
@@ -472,14 +473,14 @@ export class NWin {
 					fieldnames.push(conf.fields[i].fieldname);
 				var header=fieldnames.join('\t')+"\n";
 				var id="txtimpxls_"+tab.id;
-				c$.tabconf=conf;
+				n$.tabconf=conf;
 				w2popup.open({
 					title:"📥 <i>Import excel</i> - "+conf.tabname,
 					modal:true,
 					width: 1000,
 					height: 700,
 					body: '<textarea cols='+(header.length+8*fieldnames.length)+' id="'+id+'" style="height:100%">'+header+'</textarea>',
-					buttons: '<button class="w2ui-btn" onclick="w2popup.close()">⛌ Close</button><button class="w2ui-btn" onclick="xlsInsert_onClick(c$.tabconf,'+id+'.value)">➕ Insert data</button><button class="w2ui-btn" onclick="xlsUpdate_onClick(c$.tabconf,'+id+'.value)">✔️ Update data</button>'
+					buttons: '<button class="w2ui-btn" onclick="w2popup.close()">⛌ Close</button><button class="w2ui-btn" onclick="xlsInsert_onClick(n$.tabconf,'+id+'.value)">➕ Insert data</button><button class="w2ui-btn" onclick="xlsUpdate_onClick(n$.tabconf,'+id+'.value)">✔️ Update data</button>'
 				});
 				break;
 			case "XLS_EX":
@@ -533,7 +534,7 @@ export class NWin {
 				w2confirm(label+' selected record?').yes(function(){
 					var data={};
 					data[conf.lock]=record[conf.lock]?false:true;
-					NUT.ds.update({url:conf.urledit,data:data,where:[conf.columnkey,"=",record[conf.columnkey]]},function(res){
+					NUT.ds.update({url:conf.url+conf.tablename,data:data,where:[conf.columnkey,"=",record[conf.columnkey]]},function(res){
 						if (res.success) {
 							record[conf.lock] = data[conf.lock];
 							tab.isForm ? form.refresh() : grid.refresh();
@@ -543,7 +544,7 @@ export class NWin {
 				break;
 			case "ARCH":
 				var recid=grid.tab.isForm?form.record[conf.columnkey]:grid.getSelection();
-				NUT.ds.select({url:conf.urledit.substr(0,conf.urledit.lastIndexOf("/"))+"/sysarchive",where:[["tableid","=",conf.tableid],["recordid","=",recid]]},function(res){
+				NUT.ds.select({url:conf.url+"n_archive",where:[["tableid","=",conf.tableid],["recordid","=",recid]]},function(res){
 					if (res.success) {
 						var id = "arch_" + tab.id;
 						w2popup.open({
@@ -574,7 +575,7 @@ export class NWin {
 													}
 												}
 											},
-											{ field: 'clientid', text: 'Client ID', sortable: true }
+											{ field: 'siteid', text: 'Client ID', sortable: true }
 										],
 										records: res,
 										recid: "archiveid"
@@ -598,15 +599,13 @@ export class NWin {
 							grid.searchData.push({field:where[0],operator:where[1],value:value});
 						}
 						grid.reload();
-					}else if(item.id.startsWith("Com_")){//component
+					}else{//component
 						NUT.runComponent(item.id,{
 							records:grid.get(grid.getSelection()),
 							parent:grid.parentRecord,
 							config:conf,
 							gsmap:null
 						});
-					}else{
-						NUT.notify("⚠️" +item.id+" not starts with 'Com_'","yellow");
 					}
 				}
 		}
@@ -620,7 +619,7 @@ export class NWin {
 		//if(evt.value_new===false)evt.value_new="";
 		//this.record[conf.fieldname]=evt.value_new;
 		} else if(!NUT.isObjectEmpty(this.record)){
-			this.record[conf.fieldname]=evt.value_new;
+			this.record[conf.columnname]=evt.value_new;
 			updateChildFields(conf,this.record,this.parentRecord);
 			
 			if(conf.fieldtype=="select"&&conf.columndohoa){//bind with map
@@ -628,14 +627,14 @@ export class NWin {
 				GSMap.applyFilter(lyrconf.maporder,lyrconf.seqno,[conf.columndohoa,"=",evt.value_new]);
 
 				var where=[conf.columnkey,"=",evt.value_new];
-				var ext=c$.extent[where.toString()];
+				var ext=n$.extent[where.toString()];
 				if(ext)
 					GSMap.zoomToExtent(ext);
-				else NUT.ds.select({url:conf.foreigntable_url,select:"minx,miny,maxx,maxy",where:where},function(res){
+				else NUT.ds.select({url:conf.url+conf.foreigntable,select:"minx,miny,maxx,maxy",where:where},function(res){
 					if (res.success) {
 						var ext = [res[0].minx, res[0].miny, res[0].maxx, res[0].maxy];
 						if (res.length) GSMap.zoomToExtent(ext);
-						c$.extent[where.toString()] = ext;
+						n$.extent[where.toString()] = ext;
 					} else NUT.notify("⛔ ERROR: " + res.result, "red");
 				});
 			}
@@ -653,7 +652,7 @@ export class NWin {
 			orderby: (postData.sort ? postData.sort[0].field + " " + postData.sort[0].direction : (tabconf.orderbyclause || tabconf.columnkey + " desc"))
 		}
 		
-		//if(evt.url.includes("/sys")||evt.url.includes("/nv_"))data.where="clientid="+c$.user.clientid;
+		//if(evt.url.includes("/sys")||evt.url.includes("/nv_"))data.where="siteid="+n$.user.siteid;
 
 		// still bug
 		if (tabconf.whereclause)
@@ -773,9 +772,9 @@ export class NWin {
 		if(conf.children.length){	
 			for(var i=0;i<conf.children.length;i++){
 				fldconf=conf.children[i];
-				var form=w2ui[c$.idFormPopup||"form_"+fldconf.tabid];
+				var form=w2ui[n$.idFormPopup||"form_"+fldconf.tabid];
 				if(fldconf.fieldtype=="select")
-					this.loadChildSelect(fldconf,record[conf.fieldname]);
+					this.loadChildSelect(fldconf, record[conf.columnname]);
 				if(fldconf.calculation){
 					var _v=[];
 					for(var v=0;v<fldconf.calculationInfos.length;v++){
@@ -787,18 +786,18 @@ export class NWin {
 						else _v[v]=record[info.field];
 					}
 					var	value=eval(fldconf.calculation);
-					form.record[fldconf.fieldname]=value;
-					form.refresh(fldconf.fieldname);
+					form.record[fldconf.columnname]=value;
+					form.refresh(fldconf.columnname);
 					//w2ui["grid_"+fldconf.tabid].grid.refresh();
 					this.updateChildFields(fldconf,form.record,form.parentRecord);
 				}
 				if(fldconf.displaylogic){
 					var value=eval(fldconf.displaylogic);
 					//if(panel.fields){//is form
-						var el=form.get(fldconf.fieldname).el;
+					var el = form.get(fldconf.columnname).el;
 						el.style.display=value?"":"none";
 						el.parentNode.previousElementSibling.style.display=el.style.display;
-					//}else value?panel.showColumn(fldconf.fieldname):panel.hideColumn(fldconf.fieldname);
+					//}else value?panel.showColumn(fldconf.columnname):panel.hideColumn(fldconf.columnname);
 				}
 			}
 		}
@@ -829,13 +828,12 @@ export class NWin {
 		var grid=w2ui["grid_"+tab.id];
 		form.box.style.display = tab.isForm ?"":"none";
 		grid.box.style.display = tab.isForm ?"none":"";
-		if (tab.isForm) form.resize();
-		else grid.resize();
+		tab.isForm?form.resize():grid.resize();
 	}
 	xlsInsert_onClick(conf,csv){
 		if(csv.includes(","))
 			w2alert('Data contains invalid , character!');
-		else NUT.ds.insertCsv({ url: conf.urledit, data: csv.replaceAll('\t', ',') }, function (res) {
+		else NUT.ds.insertCsv({ url: conf.url+conf.tablename, data: csv.replaceAll('\t', ',') }, function (res) {
 			if (res.success)
 				NUT.notify("ℹ️ Data imported.","lime");
 			else
@@ -854,8 +852,8 @@ export class NWin {
 			var domain={},prikey=null,privalue=null;
 			for(var i=0;i<conf.fields.length;i++){
 				var fld=conf.fields[i];
-				if(fld.domainid)domain[fld.fieldname]=NUT.domains[fld.domainid].lookdown;
-				if(fld.isprimarykey)prikey=fld.fieldname;
+				if (fld.domainid) domain[fld.columnname]=NUT.domains[fld.domainid].lookdown;
+				if (fld.isprimarykey) prikey = fld.columnname;
 			}
 
 			var header=lines[0].split('\t');
@@ -869,7 +867,7 @@ export class NWin {
 					if(key==prikey)privalue=value;
 					else json[key]=domain[key]?domain[key][value]:value;
 				}
-				NUT.ds.update({url:conf.urledit,where:[prikey,"=",privalue],data:json},function(res){
+				NUT.ds.update({url:conf.url+conf.tablename,where:[prikey,"=",privalue],data:json},function(res){
 					if(res.success)
 						NUT.notify("ℹ️ Record updated.","lime");
 					else
@@ -886,9 +884,9 @@ export class NWin {
 			archive:JSON.stringify(archive),
 			recordid:recid,
 			tableid:tableid,
-			clientid:c$.user.clientid
+			siteid:n$.user.siteid
 		};
-		NUT.ds.insert({url:url+"/sysarchive",data:data},function(res){
+		NUT.ds.insert({url:url+"n_archive",data:data},function(res){
 			if (res.sucess)
 				NUT.notify("ℹ️ Record archived.","lime");
 			else
@@ -896,10 +894,10 @@ export class NWin {
 		});
 	}
 	loadChildSelect(fldconf,value){
-		var form=w2ui[c$.idFormPopup||"form_"+fldconf.tabid];
-		var field=form.get(fldconf.fieldname);
+		var form=w2ui[n$.idFormPopup||"form_"+fldconf.tabid];
+		var field = form.get(fldconf.columnname);
 		var grid=w2ui["grid_"+fldconf.tabid];
-		var column=grid.getColumn(fldconf.fieldname);
+		var column = grid.getColumn(fldconf.columnname);
 		var key=fldconf.foreigntableid+"-"+value;
 		var domain=NUT.domains[key];
 		if(domain){
@@ -910,7 +908,7 @@ export class NWin {
 				column.editable.lookup=domain.lookup;
 				grid.refresh();
 			}
-		}else NUT.ds.select({url:fldconf.foreigntable_url,select:[fldconf.columnkey,fldconf.columndisplay],where:[fldconf.whereclause,"=",value]},function(res){
+		}else NUT.ds.select({url:conf.url+fldconf.foreigntable,select:[fldconf.columnkey,fldconf.columndisplay],where:[fldconf.whereclause,"=",value]},function(res){
 			if (res.success) {
 				domain = { options: [], lookup: {} };
 				for (var i = 0; i < res.length; i++) {

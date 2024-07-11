@@ -1,4 +1,4 @@
-var Com_SysWfRunJob={
+var SysWfRunJob={
 	run:function(p){
 		if(p.records.length){
 			var self=this;
@@ -9,7 +9,7 @@ var Com_SysWfRunJob={
 			var wfconf=_context.workflow[this.job.jobtypeid];
 			if(wfconf)
 				this.showWorkflow(wfconf);
-			else NUT.ds.select({url:NUT.URL+"wfjobtype",select:"jobtypedata,users",clientid:_context.curApp.clientid,where:["jobtypeid","=",this.job.jobtypeid]},function(res){
+			else NUT.ds.select({url:NUT.URL+"wfjobtype",select:"jobtypedata,users",siteid:_context.curApp.siteid,where:["jobtypeid","=",this.job.jobtypeid]},function(res){
 				if(res.length){
 					self.users=res[0].users;
 					wfconf=res[0].jobtypedata;
@@ -27,7 +27,7 @@ var Com_SysWfRunJob={
 			conf.tabs[0].tempWhere=[conf.tabs[0].columnkey,"=",this.job.recordid];
 			this.showDlgWorkflow(wfconf,conf);
 		}else{
-			NUT.ds.select({url:NUT.URL+"syscache",clientid:_context.curApp.clientid,where:["windowid","=",this.job.windowid]},function(res){
+			NUT.ds.select({url:NUT.URL+"syscache",siteid:_context.curApp.siteid,where:["windowid","=",this.job.windowid]},function(res){
 				if(res.length){
 					conf=NUT.configWindow(zipson.parse(res[0].config),JSON.parse(res[0].layout));
 					conf.tabid=conf.windowid;
@@ -168,7 +168,7 @@ var Com_SysWfRunJob={
 		NUT.ds.update({url:NUT.URL+"wfjob",where:["jobid","=",job.jobid],data:data},function(){
 			var data=isFinish?{assignedto:job.assignedto,stepid:job.currentstep}:{description:txtJob_Note.value,assignedto:cboJob_ToUser.value,stepid:cboJob_NextStep.value};
 			data.updatetime=new Date();
-			data.clientid=_context.user.clientid;
+			data.siteid=_context.user.siteid;
 			data.sentfrom=job.assignedto;
 			data.jobid=job.jobid;			
 			NUT.ds.insert({url:NUT.URL+"wfhistory",data:data});

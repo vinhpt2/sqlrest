@@ -1,4 +1,4 @@
-var Com_SysWfBackJob={
+var SysWfBackJob={
 	run:function(p){
 		if(p.records.length){
 			this.job=p.records[0];

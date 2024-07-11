@@ -52,7 +52,7 @@ export class SqlREST{
 		}
 
 		if(p.select)decode+="&outFields="+p.select;
-		//if(_context.user.clientid&&p.url&&(p.url.includes("/sys")||p.url.includes("/nv_")))decode+=" and clientid="+(p.clientid!=undefined?p.clientid:_context.user.clientid);
+		//if(_context.user.siteid&&p.url&&(p.url.includes("/sys")||p.url.includes("/nv_")))decode+=" and siteid="+(p.siteid!=undefined?p.siteid:_context.user.siteid);
 		if(p.order)decode+="&orderByFields="+p.order;
 		return decode;
 	}

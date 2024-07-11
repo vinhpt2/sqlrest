@@ -1,4 +1,4 @@
-var Com_SysWfAddJob={
+var SysWfAddJob={
 	run:function(p){
 		if(p.records.length){
 			var record=p.records[0];
@@ -21,7 +21,7 @@ var Com_SysWfAddJob={
 						recordid:record[conf.columnkey],
 						priorityid:1,
 						jobstatusid:1,
-						clientid:_context.user.clientid,
+						siteid:_context.user.siteid,
 						currentstep:record[jobstepstart]
 					}
 					if(data.assignedto!=data.ownedby)data.sentfrom=data.ownedby;

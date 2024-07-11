@@ -28,7 +28,7 @@ var Com_HrmsDailyM03Report={
 				if(phucaps.length)NUT.ds.select({url:url+"rpt_weeklysanluong",where:[["nam","=",numTinhCong_Year.value],["thang","=",numTinhCong_Month.value],["madoitac","=",cboTinhCong_DoiTac.value],["dulieu","=",chkTinhCong_Edit.checked?1:0]]},function(res){
 					if(res.length){
 						var pcPG=phucaps[0];
-						var win=window.open("client/"+_context.user.clientid+"/html/DailyM03Report.html");
+						var win=window.open("client/"+_context.user.siteid+"/html/DailyM03Report.html");
 						win.onload=function(){
 							this.labThangNam.innerHTML=numTinhCong_Month.value+"/"+numTinhCong_Year.value;
 							var oldMaNhanVien=null;

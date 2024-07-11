@@ -1,9 +1,10 @@
-﻿var c$ = {
+﻿var n$ = {
 	user: null,
 	winid: null,
 	extent: null,
 	layer: null,
 	app: null,
+	lang:null,
 	workflow: null,
 	now: function () {
 		return (new Date()).toISOString().substr(0, 10);
@@ -19,20 +20,22 @@
 	}
 }
 var NUT = {
-	URL:"https://localhost:7006/rest/nut/nut/data/",
+	URL: "https://localhost:7006/rest/nut/nut/data/",
 	ds: null,
 	apps: {},
 	wins: {},
 	domains: {},
+	urls: {},
 	isMobile : (window.orientation !== undefined),
 	ERD:{
-		window:["windowid","windowname","windowtype","appid","execname","isopensearch"],
-		tab: ["tabid", "parenttabid", "tabname", "tablevel", "seqno", "layoutcols", "linkchildfield", "linkparentfield", "linktable", "whereclause", "orderbyclause", "tableid", "windowid", "midchildfield", "midparentfield", "midtable", "tablename", "viewname", "columnkey", "columncode", "columndisplay", "columnlock", "columnorg", "url", "servicetype", "midtable_prikey", "geotableid", "filterfield", "filterdefault", "beforechange", "afterchange", "isnotinsert", "isnotupdate", "isnotdelete", "isnotarchive", "isnotlock","archivetype"],
-		field: ["fieldid", "fieldname", "alias", "isdisplaygrid", "isdisplay", "issearch", "displaylength", "seqno", "isreadonly", "fieldlength", "vformat", "defaultvalue", "isrequire", "isfrozen", "fieldgroup", "tabid", "columnid", "fieldtype", "foreigntable_url", "columnkey", "columndisplay", "domainid", "issearchtonghop", "foreigntableid", "columncode", "parentfieldid", "wherefieldname", "displaylogic", "placeholder", "calculation", "columntype", "colspan", "rowspan", "isprikey", "columndohoa", "foreignwindowid"],
-		menu:["menuid","menuname","parentid","seqno","description","issummary","appid","windowid","clientid","tabid","menutype","execname","icon"]
+		window: ["windowid", "windowname", "windowtype", "appid", "execname", "isopensearch", "translate"],
+		tab: ["tabid", "parenttabid", "tabname", "tablevel", "seqno", "layoutcols", "linkchildfield", "linkparentfield", "linktable", "whereclause", "orderbyclause", "tableid", "windowid", "midchildfield", "midparentfield", "midtable", "tablename", "viewname", "columnkey", "columncode", "columndisplay", "columnlock", "columnorg", "isattachment", "serviceid", "midtable_prikey", "geotableid", "filterfield", "filterdefault", "beforechange", "afterchange", "isnotinsert", "isnotupdate", "isnotdelete", "isnotarchive", "isnotlock","archivetype","translate"],
+		field: ["fieldid", "fieldname", "translate", "isdisplaygrid", "isdisplay", "issearch", "displaylength", "seqno", "isreadonly", "fieldlength", "vformat", "defaultvalue", "isrequire", "isfrozen", "fieldgroup", "tabid", "columnid", "fieldtype", "foreigntable", "columnkey", "columndisplay", "domainid", "issearchtonghop", "foreigntableid", "columncode", "parentfieldid", "wherefieldname", "displaylogic", "placeholder", "calculation", "columntype", "colspan", "rowspan", "isprikey", "columndohoa", "foreignwindowid","columnname"],
+		menu:["menuid","menuname","parentid","seqno","translate","issummary","appid","windowid","siteid","tabid","menutype","execname","icon"]
 	},
 	I_USER:btoa("_USER"),
-	I_PASS:btoa("_PASS"),
+	I_PASS: btoa("_PASS"),
+	I_LANG: btoa("_LANG"),
 	LAYOUT_COLS : 3,
 	GRID_LIMIT : 100,
 	z: function (config) {// tag, attribute, childrens
@@ -52,7 +55,7 @@ var NUT = {
 		for(var i=0;i<caches.length;i++){
 			var cache=caches[i];
 			domain[cache.domainid]={items:[],lookup:{},lookdown:{}};
-			var item=JSON.parse(cache.domain);
+			var item=JSON.parse(cache.domainjson);
 			for(var j=0;j<item.length;j++){
 				domain[cache.domainid].items.push({id:item[j][0],text:item[j][1]});
 				domain[cache.domainid].lookup[item[j][0]]=item[j][1];
@@ -69,8 +72,10 @@ var NUT = {
 		if(conf.tabs){
 			for(var i=0;i<conf.tabs.length;i++){
 				var tab={fields:[],tabs:[],menus:[],children:[],maxLevel:0};
-				for(var j=0;j<NUT.ERD.tab.length;j++)
-					tab[NUT.ERD.tab[j]]=conf.tabs[i][j];
+				for (var j = 0; j < NUT.ERD.tab.length; j++) {
+					tab[NUT.ERD.tab[j]] = conf.tabs[i][j];
+					if(NUT.ERD.tab[j] == "serviceid")tab.url=NUT.urls[conf.tabs[i][j]]+"data/";
+				}
 				if(layout){
 					tab.layout=document.createElement("div");
 					tab.layout.innerHTML=layout[tab.tabid];
@@ -181,6 +186,73 @@ var NUT = {
 		}
 		return winconf;
 	},
+	createWindowTitle:function(id, divTitle, appName){
+		if (n$.winid) {
+			for (var i = 0; i < divTitle.childNodes.length; i++) {
+				var node = divTitle.childNodes[i].firstChild;
+				node.style.color = "gray";
+				if (id == node.tag) {
+					if (appName) node.innerHTML = appName;
+					node.onclick();
+					return;
+				}
+			}
+		} else divTitle.innerHTML = "";
+
+		var divWindow = divTitle.parentNode;
+		for (var i = 1; i < divWindow.childNodes.length; i++)
+			divWindow.childNodes[i].style.display = "none";
+
+		var div = document.createElement("div");
+		div.className = "nut-full";
+		divWindow.appendChild(div);
+
+		var span = document.createElement("span");
+		var a = document.createElement("i");
+		a.innerHTML = NUT.w2utils.lang('_Loading');
+		a.className = "nut-link";
+		a.div = div;
+		a.tag = id;
+		a.onclick = function () {
+			var children = this.div.parentNode.childNodes;
+			for (var i = 1; i < children.length; i++)
+				children[i].style.display = "none";
+			this.div.style.display = "";
+
+			children = this.parentNode.parentNode.childNodes;
+			for (var i = 0; i < children.length; i++)
+				children[i].firstChild.style.color = "gray";
+			this.style.color = "";
+
+			n$.winid = this.tag;
+		};
+		span.appendChild(a);
+
+		var close = document.createElement("span");
+		close.className = "nut-close";
+		close.innerHTML = " ⛌   ";
+		close.tag = id;
+		close.onclick = function () {
+			var title = this.parentNode.parentNode;
+			this.previousElementSibling.div.remove();
+			this.parentNode.remove();
+			if (this.tag == n$.winid) {
+				if (title.childNodes.length) title.childNodes[0].firstChild.onclick();
+				else n$.winid = null;
+			}
+		}
+		span.appendChild(close);
+
+		divTitle.appendChild(span);
+		return a;
+	},
+	translate: function (str) {
+		try {
+			return JSON.parse(str)[n$.lang];
+		} catch (ex) {
+			return str;
+		}
+	},
 	calcWhere: function (rec){
 		var where="";
 		for(var key in rec)if(rec.hasOwnProperty(key)){
@@ -209,20 +281,20 @@ var NUT = {
 		return objC;
 	},
 	alert: function (msg) {
-		NUT.w2alert(msg, 'ℹ️ <i class="nut-link">Information</i>');
+		NUT.w2alert(msg, '_Information');
 	},
 	confirm: function (msg, callback) {
-		NUT.w2confirm(msg, '❓ <i class="nut-link">Confirm</i>', callback);
+		NUT.w2confirm(msg, '_Confirm', callback);
 	},
 	notify: function (msg, color) {
 		var opt = (color=="red" ? { error: true } : { timeout: 10000 });
-		NUT.utils.notify("<span style='color:"+(opt.error?"white":color)+"'>" + msg +"</span>", opt);
+		NUT.w2utils.notify("<span style='color:"+(opt.error?"white":color)+"'>" + msg +"</span>", opt);
 	},
 	loading: function (div) {
 		if (div) {
 			NUT.divLoading = div;
-			NUT.utils.lock(div, undefined, true);
-		} else NUT.utils.unlock(NUT.divLoading);
+			NUT.w2utils.lock(div, undefined, true);
+		} else NUT.w2utils.unlock(NUT.divLoading);
 	},
 	runComponent(com, data) {
 		//data:records,parent,config,gsmap
@@ -231,7 +303,7 @@ var NUT = {
 			window[com].run(data);
 		} else {//load component
 			var script = document.createElement("script");
-			script.src = "site/" + (com.startsWith("Com_Sys") ? "0/0/" : c$.user.siteid + "/" + c$.app.appid +"/") + com + ".js";
+			script.src = "site/" + n$.app.siteid + "/" + n$.app.appid +"/" + com + ".js";
 			document.head.appendChild(script);
 			script.onload = function () {
 				window[com].run(data);

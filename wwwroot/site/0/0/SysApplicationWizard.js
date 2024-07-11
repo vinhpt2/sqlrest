@@ -1,25 +1,25 @@
-var Com_SysApplicationWizard={
+var SysApplicationWizard={
 	step:1,
 	a:null,
 	run:function(p){
 		this.step=1;
 		if(p.records.length){
-			this.app=p.records[0];
+			this.app = p.records[0];
 			this.showDlgWizard();
-		}else NUT.tagMsg("No Application selected!","yellow");
+		} else NUT.tagMsg("⚠️ No Application selected!","yellow");
 	},
 	showDlgWizard:function(conf){
 		var self=this;
-		var id="divCom_SysApplicationWizard";
-		this.a=createWindowTitle(id);
-		this.a.innerHTML='Wizard.'+ self.app.applicationname;
-		this.a.div.innerHTML='<iframe id="'+id+'" style="width:850px;height:550px;borderby:none;background:white" src="client/0/html/step1.html"></iframe></br><button id="butBack" class="w2ui-btn" onclick="Com_SysApplicationWizard.go(-1)">Close</button> <button id="butNext" class="w2ui-btn" onclick="Com_SysApplicationWizard.go(1)">Next</button>';
+		var id="div_SysApplicationWizard";
+		this.a=NUT.createWindowTitle(id,divTitle);
+		this.a.innerHTML='Wizard.'+ self.app.appname;
+		this.a.div.innerHTML='<iframe id="'+id+'" style="width:850px;height:550px;borderby:none;background:white" src="site/0/0/step1.html"></iframe></br><button id="butBack" class="w2ui-btn" onclick="Com_SysApplicationWizard.go(-1)">Close</button> <button id="butNext" class="w2ui-btn" onclick="Com_SysApplicationWizard.go(1)">Next</button>';
 	},
 	go:function(index){
-		var id="divCom_SysApplicationWizard";
+		var id="div_SysApplicationWizard";
 		if((index<0&&this.step>1)||(index>0&&this.step<3)){//next-back
 			this.step+=index;
-			document.getElementById(id).src="client/0/html/step"+this.step+".html";
+			document.getElementById(id).src="site/0/0/step"+this.step+".html";
 			butBack.innerHTML=(this.step==1?"Close":"Back");
 			butNext.innerHTML=(this.step==3?"Finish":"Next");
 		}else if(this.step==3&&index>0){//finish
@@ -52,7 +52,7 @@ var Com_SysApplicationWizard={
 			});
 		} else {
 			var script=document.createElement("script");
-			script.src="client/0/com/"+id+".js";
+			script.src="site/0/0/"+id+".js";
 			document.head.appendChild(script);
 			script.onload=function(){
 				window[id].run({

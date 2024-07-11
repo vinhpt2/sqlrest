@@ -7,7 +7,7 @@
 		.box{
 			width:400px;
 			height:400px;
-			borderby:1px solid;
+			border:1px solid;
 			overflow:auto
 		}
 		.line{
@@ -28,10 +28,10 @@
 	</table>
 </body>
 <script>
-var _app=parent.Com_SysApplicationWizard.app;
+var _app=parent.SysApplicationWizard.app;
 var _row=null;
 function body_onLoad(){
-	parent.NUT.ds.select({url:parent.NUT.URL+"sysservice",where:["clientid","=",_app.clientid]},function(res){
+	parent.NUT.ds.select({url:parent.NUT.URL+"n_service",where:["site","=",_app.siteid]},function(res){
 		for(var i=0;i<res.length;i++){
 			var row=tblService.insertRow();
 			row.className="line";
@@ -48,7 +48,7 @@ function row_onClick(){
 			tblService.rows[i].style.backgroundColor="";
 		this.style.backgroundColor="#B6D5FF";
 		_row=this;
-		parent.NUT.ds.select({url:parent.NUT.URL+"systable",where:["serviceid","=",this.tag.serviceid]},function(res){
+		parent.NUT.ds.select({url:parent.NUT.URL+"n_table",where:["serviceid","=",this.tag.serviceid]},function(res){
 			tblTable.innerHTML="";
 			for(var i=0;i<res.length;i++){
 				var row=tblTable.insertRow();
@@ -64,7 +64,7 @@ function butNewService_onClick(){
 function butImportTable_onClick(){
 	if(_row){
 		var records=[_row.tag];
-		var id="Com_SysImportTable";
+		var id="SysImportTable";
 		if(parent.window[id]){
 			parent.window[id].run({
 				records:records

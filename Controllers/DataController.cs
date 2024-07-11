@@ -6,35 +6,36 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.Eventing.Reader;
 using System.Text.Json;
 
 namespace SQLRestC.Controllers
 {
     [ApiController]
-    [Route(Global.ROOT+"{database}/{schema}/data/{table}")]
+    [Route(Global.ROOT + "{database}/{schema}/data/{table}")]
     public class DataController : ControllerBase
     {
         //select data in table
         [HttpGet]
-        public ResponseJson Select(String database, String schema, String table, String select=null, String where = null, String groupby = null, String having = null, String orderby = null, int offset = 0, int limit = 0)
+        public ResponseJson Select(String database, String schema, String table, String select = null, String where = null, String groupby = null, String having = null, String orderby = null, int offset = 0, int limit = 0)
         {
             Server server = null;
             try
             {
-                server = new Server(new ServerConnection(Global.server,Global.username,Global.password));
+                server = new Server(new ServerConnection(Global.server, Global.username, Global.password));
                 var db = server.Databases[database];
                 var response = new ResponseJson { success = (db != null) };
                 if (response.success)
                 {
-                    var from= " from " + database + "." + schema + "." + table;
-                    var sql =  "select " + (select==null?"*":select) + from;
-                    if(where !=null)sql+= " where " + where;
+                    var from = " from " + database + "." + schema + "." + table;
+                    var sql = "select " + (select == null ? "*" : select) + from;
+                    if (where != null) sql += " where " + where;
                     if (groupby != null) sql += " group by " + groupby;
                     if (having != null) sql += " having " + having;
-                    sql += " order by " + (orderby ==null?1: orderby);
-                    sql +=" offset " + offset + " rows ";
+                    sql += " order by " + (orderby == null ? 1 : orderby);
+                    sql += " offset " + offset + " rows ";
                     sql += " fetch next " + (limit == 0 ? Global.LIMIT : limit) + " rows only";
-                    
+
                     response.success = Global.safeSqlInjection(sql);
                     if (response.success)
                     {
@@ -49,7 +50,7 @@ namespace SQLRestC.Controllers
                             if (tbl != null)
                             {
                                 var rs = new Dictionary<String, Object>[tbl.Rows.Count];
-                                for (int r = 0; r < tbl.Rows.Count; r++)
+                                for (int r = 0; r < rs.Length; r++)
                                 {
                                     var row = tbl.Rows[r];
                                     var rec = new Dictionary<String, Object>();
@@ -85,7 +86,7 @@ namespace SQLRestC.Controllers
         //select data in table by id
         //table must have one column primary key
         [HttpGet("{id}")]
-        public ResponseJson SelectById(String database, String schema, String table, String id, String orderby=null)
+        public ResponseJson SelectById(String database, String schema, String table, String id, String orderby = null)
         {
             Server server = null;
             try
@@ -100,10 +101,10 @@ namespace SQLRestC.Controllers
                     if (response.success)
                     {
                         var index = tb.Indexes[0];
-                        response.success = (index != null && index.IndexKeyType==IndexKeyType.DriPrimaryKey);
+                        response.success = (index != null && index.IndexKeyType == IndexKeyType.DriPrimaryKey);
                         if (response.success) {
-                            var primaryKey =index.IndexedColumns[0].Name;
-                            var sql = "select * from "+database + "." + schema + "." + table + " where " + primaryKey + " in(" + id + ")";
+                            var primaryKey = index.IndexedColumns[0].Name;
+                            var sql = "select * from " + database + "." + schema + "." + table + " where " + primaryKey + " in(" + id + ")";
                             if (orderby != null) sql += " order by " + orderby;
                             response.success = Global.safeSqlInjection(sql);
                             if (response.success)
@@ -114,7 +115,7 @@ namespace SQLRestC.Controllers
                                     if (tbl != null)
                                     {
                                         var rs = new Dictionary<String, Object>[tbl.Rows.Count];
-                                        for (int r = 0; r < tbl.Rows.Count; r++)
+                                        for (int r = 0; r < rs.Length; r++)
                                         {
                                             var row = tbl.Rows[r];
                                             var rec = new Dictionary<String, Object>();
@@ -133,7 +134,7 @@ namespace SQLRestC.Controllers
                         }
                         else response.result = "Table '" + database + "." + schema + "." + table + "' does not have primary key!";
                     }
-                    else response.result = "Table '" + database +"."+schema+"."+table + "' not found!";
+                    else response.result = "Table '" + database + "." + schema + "." + table + "' not found!";
                 }
                 else response.result = "Database '" + database + "' not found!";
                 return response;
@@ -152,7 +153,7 @@ namespace SQLRestC.Controllers
 
         //insert data to table
         [HttpPost]
-        public ResponseJson Insert(String database, String schema, String table, Dictionary<String,Object>[] records, bool returnId=false)
+        public ResponseJson Insert(String database, String schema, String table, Dictionary<String, Object>[] data, bool returnid = false)
         {
             Server server = null;
             try
@@ -162,27 +163,31 @@ namespace SQLRestC.Controllers
                 var response = new ResponseJson { success = (db != null) };
                 if (response.success)
                 {
-                    
-                    var sqls = new String[records.Length];
-                    for (var i = 0; i < records.Length; i++)
+
+                    var sqls = new String[data.Length];
+                    for (var i = 0; i < data.Length; i++)
                     {
-                        var rec = records[i];
+                        var rec = data[i];
                         var keyStr = String.Join(",", rec.Keys);
                         var values = rec.Values.ToArray();
                         for (int j = 0; j < values.Length; j++)
                         {
-                            var val = (JsonElement)values[j];
-                            if (val.ValueKind==JsonValueKind.String) values[j] = "N'" + val + "'";
+                            if(values[j] != null){
+                                var val = (JsonElement)values[j];
+                                if (val.ValueKind == JsonValueKind.String) values[j] = "N'" + val + "'";
+                                else if(val.ValueKind == JsonValueKind.True) values[j] = 1;
+                                else if (val.ValueKind == JsonValueKind.False) values[j] = 0;
+                            }
                         }
                         var sqlStr = "insert into " + database + "." + schema + "." + table + "(" + keyStr + ") values(" + String.Join(",", values) + ")";
                         response.success = Global.safeSqlInjection(sqlStr);
                         if (!response.success) break;
-                        sqls[i] = (returnId?sqlStr + ";select scope_identity()":sqlStr);
+                        sqls[i] = (returnid ? sqlStr + ";select scope_identity()" : sqlStr);
                     }
                     if (response.success)
                     {
                         var sql = String.Join(";", sqls);
-                        if (returnId)
+                        if (returnid)
                             using (var ds = db.ExecuteWithResults(sql))
                             {
                                 var newids = new object[ds.Tables.Count];
@@ -230,13 +235,16 @@ namespace SQLRestC.Controllers
                     {
                         var keys = data.Keys.ToArray();
                         var values = data.Values.ToArray();
-                        var clauses=new List<String>();
+                        var clauses=new String[values.Length];
                         for (int j = 0; j < values.Length; j++)
                         {
-                            if (values[j] == null)clauses.Add(keys[j] + "=null");
+                            if (values[j] == null) clauses[j]=keys[j] + "=null";
                             else {
                                 var val = (JsonElement)values[j];
-                                clauses.Add(val.ValueKind == JsonValueKind.String ? keys[j] + "=N'" + val + "'" : keys[j] + "=" + val);
+                                if (val.ValueKind == JsonValueKind.String) clauses[j]=keys[j] + "=N'" + val + "'";
+                                else if (val.ValueKind == JsonValueKind.True) clauses[j]=keys[j] + "="+ 1;
+                                else if (val.ValueKind == JsonValueKind.False) clauses[j]=keys[j] + "=" + 0;
+                                else clauses[j]=keys[j]+"="+ val;
                             }
                         }
                         var sqlStr = "update " + database + "." + schema + "." + table + " set " + String.Join(",", clauses) + " where " + where;
@@ -293,16 +301,30 @@ namespace SQLRestC.Controllers
                                     response.result = "Record " + i + "th does NOT have primary key";
                                     break;
                                 }
+                                response.success = (rec[primaryKey] != null);
+                                if (!response.success)
+                                {
+                                    response.result = "Record " + i + "th does NOT have primary key = NULL";
+                                    break;
+                                }
+
                                 var primaryVal = (JsonElement)rec[primaryKey];
                                 var keys = rec.Keys.ToArray();
                                 var values = rec.Values.ToArray();
-                                var clauses = new List<String>();
+                                var clauses = new String[values.Length];
                                 for (int j = 0; j < values.Length; j++)
                                 {
                                     if (!primaryKey.Equals(keys[j]))
                                     {
-                                        var val = (JsonElement)values[j];
-                                        clauses.Add(val.ValueKind == JsonValueKind.String ? keys[j] + "=N'" + val + "'" : keys[j] + "=" + val);
+                                        if (values[j] == null) clauses[j]=keys[j] + "=null";
+                                        else
+                                        {
+                                            var val = (JsonElement)values[j];
+                                            if (val.ValueKind == JsonValueKind.String) clauses[j] = keys[j] + "=N'" + val + "'";
+                                            else if (val.ValueKind == JsonValueKind.True) clauses[j] = keys[j] + "=" + 1;
+                                            else if (val.ValueKind == JsonValueKind.False) clauses[j] = keys[j] + "=" + 0;
+                                            else clauses[j] = keys[j] + "=" + val;
+                                        }
                                     }
                                 }
                                 var sqlStr = "update " + database + "." + schema + "." + table + " set " + String.Join(",", clauses) + " where " + primaryKey + "=" + (primaryVal.ValueKind == JsonValueKind.String ? "N'" + primaryVal + "'" : primaryVal);

@@ -1,4 +1,4 @@
-var Com_SysAddLayer={
+var SysAddLayer={
 	run:function(p){
 		if(p.parent){
 			this.app=p.parent;
@@ -29,7 +29,7 @@ var Com_SysAddLayer={
 			fields.push(fld);
 		}
 
-		var id="divCom_SysAddLayer";
+		var id="div_SysAddLayer";
 		var self=this;
 		w2popup.open({
 			title: '🗺️ <i>Add layers from tables</i>',
@@ -56,7 +56,7 @@ var Com_SysAddLayer={
 									if(change[key]){
 										var table=lookupTable[key];
 										i++;
-										layers.push({layername:table.tablename,alias:table.alias,seqno:i,layerindex:i,appid:table.appid,serviceid:table.serviceid,tableid:table.tableid,clientid:_context.user.clientid});
+										layers.push({layername:table.tablename,alias:table.alias,seqno:i,layerindex:i,appid:table.appid,serviceid:table.serviceid,tableid:table.tableid,siteid:_context.user.siteid});
 									}
 								}
 								self.insertLayers(layers);

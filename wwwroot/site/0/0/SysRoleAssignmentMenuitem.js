@@ -1,4 +1,4 @@
-var Com_SysRoleAssignmentMenuitem={
+var SysRoleAssignmentMenuitem={
 	run:function(p){
 		if(p.records.length){
 			this.app=p.parent;
@@ -54,7 +54,7 @@ var Com_SysRoleAssignmentMenuitem={
 			var data={
 				roleid:this.role.roleid,
 				menuitemid:menuitemid,
-				clientid:_context.user.clientid
+				siteid:_context.user.siteid
 			};
 			NUT.ds.insert({url:NUT.URL+"sysrolemenu",data:data},function(res){
 				if(res.length)NUT.tagMsg("Record inserted.","lime");

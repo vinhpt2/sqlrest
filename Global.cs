@@ -1,6 +1,13 @@
-﻿using Microsoft.SqlServer.Management.Smo;
+﻿using Azure;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.SqlServer.Management.Smo;
+using Microsoft.SqlServer.Management.XEvent;
 using Newtonsoft.Json.Linq;
+using SQLRestC.Controllers;
 using System.Collections;
+using System.Collections.Generic;
+using System.Data;
+using System.Security.Cryptography;
 
 namespace SQLRestC
 {
@@ -12,44 +19,114 @@ namespace SQLRestC
         public const String MS_PATH = "MS_Path";
         public const String MS_DESCRIPTION = "MS_Description";
         public const int LIMIT = 200;
+
+        public static DatabaseJson[] getDatabaseInfo(Server sv,bool detail = false, bool system=false)
+        {
+            var jsonArr = new DatabaseJson[sv.Databases.Count];
+            for (int i=0;i< jsonArr.Length; i++)
+            {
+                var obj = sv.Databases[i];
+                if (obj.IsSystemObject == system)
+                {
+                    jsonArr[i]=new DatabaseJson
+                    {
+                        id = obj.ID,
+                        name = obj.Name,
+                        dataUsage = obj.DataSpaceUsage,
+                        indexUsage = obj.IndexSpaceUsage,
+                        schemas = detail ? getSchemaInfo(obj, false, system) : null
+                    };
+                }
+            }
+            return jsonArr;
+        }
+
+        public static SchemaJson[] getSchemaInfo(Database db, bool detail = false, bool system = false)
+        {
+            var jsonArr = new SchemaJson[db.Schemas.Count];
+            for (int i=0;i<jsonArr.Length;i++)
+            {
+                var obj = db.Schemas[i];
+                if (obj.IsSystemObject == system)
+                {
+                    jsonArr[i]=new SchemaJson
+                    {
+                        id = obj.ID,
+                        name = obj.Name,
+                        owner = obj.Owner,
+                        tables = detail ? getTableInfo(db, obj.Name) : null,
+                        views = detail ? getViewInfo(db, obj.Name) : null
+                    };
+                }
+            }
+            return jsonArr;
+        }
+        public static TableJson[] getTableInfo(Database db,String schema, bool detail = false)
+        {
+            var sql = "select tb.object_id,tb.name from sys.tables tb left join sys.schemas sm on tb.schema_id=sm.schema_id where sm.name='" + schema + "'";
+            using (var ds = db.ExecuteWithResults(sql))
+            {
+                var tbl = ds.Tables[0];
+                var rs = new TableJson[tbl.Rows.Count];
+                for (int i=0;i<rs.Length;i++)
+                {
+                    var row = tbl.Rows[i];
+                    rs[i] = new TableJson
+                    {
+                        id = (int)row["object_id"],
+                        name = (String)row["name"]
+                    };
+                    if (detail) rs[i].columns = Global.getColumnInfo(db.Tables[rs[i].name, schema].Columns);
+                }
+                return rs;
+            }
+        }
+        public static ViewJson[] getViewInfo(Database db, String schema, bool detail = false)
+        {
+            var sql = "select tb.object_id,tb.name from sys.views tb left join sys.schemas sm on tb.schema_id=sm.schema_id where sm.name='" + schema + "'";
+            using (var ds = db.ExecuteWithResults(sql))
+            {
+                var tbl = ds.Tables[0];
+                var rs = new ViewJson[tbl.Rows.Count];
+                for (int i = 0; i < rs.Length; i++)
+                {
+                    var row = tbl.Rows[i];
+                    rs[i] = new ViewJson
+                    {
+                        id = (int)row["object_id"],
+                        name = (String)row["name"]
+                    };
+                    if (detail) rs[i].columns = Global.getColumnInfo(db.Tables[rs[i].name, schema].Columns);
+                }
+                return rs;
+            }
+        }
+        public static ColumnJson[] getColumnInfo(ColumnCollection cols)
+        {
+            var rs=new ColumnJson[cols.Count];
+            for(int i=0;i<rs.Length;i++)
+            {
+                var obj = cols[i];
+                rs[i]=new ColumnJson
+                {
+                    id = obj.ID,
+                    name = obj.Name,
+                    dataType = obj.DataType.Name,
+                    length = (obj.DataType.IsNumericType ? obj.DataType.NumericScale : obj.DataType.MaximumLength),
+                    precision = obj.DataType.NumericPrecision,
+                    nullable = obj.Nullable,
+                    inPrimaryKey = obj.InPrimaryKey,
+                    identity = obj.Identity,
+                    defaultValue = obj.Default,
+                    description = obj.ExtendedProperties.Contains(Global.MS_DESCRIPTION) ? (String)obj.ExtendedProperties[Global.MS_DESCRIPTION].Value : null
+                };
+            }
+            return rs;
+        }
+        
         public static bool safeSqlInjection(String sql)
         {
             return !sql.Contains(";");
-        }
-        public static String decodeWhere(ArrayList where)
-        {
-            var decode = "";
-            if (where != null)
-            {
-                var i0 = ("and".Equals(where[0]) || "or".Equals(where[0]) ? 1 : 0);
-                var needOpen = (where.Count > i0 + 1);
-                if (where[i0] is ArrayList)
-                {//array-array
-                    if (needOpen) decode += "(";
-                    for (var i = i0; i < where.Count; i++)
-                    {
-                        var subWhere = (ArrayList)where[i];
-                        var j0 = ("and".Equals(subWhere[0]) || "or".Equals(subWhere[0]) ? 1 : 0);
-                        if (i > i0) decode += ",";
-                        if (subWhere[j0] is ArrayList)
-                        {//array-array
-                            decode += decodeWhere(subWhere);
-                        }
-                        else
-                        {//array
-                            var op = subWhere[j0 + 1];
-                            var value = subWhere[j0 + 2];
-                            decode += subWhere[j0] + ("in".Equals(op) ? " in(" + value + ")" : " " + op + " " + value);
-                        }
-                    }
-                    if (needOpen) decode += ")";
-                } else {//array
-                    var op = where[i0 + 1];
-                    var value = where[i0 + 2];
-                    decode += where[i0] + ("in".Equals(op) ? " in(" + value + ")" : " " + op + " " + value);
-                }
-            }
-            return decode;
         }
         //obj can be Table(create new column) or Column(change exists column)
         public static Column makeColumn(ColumnJson col,Object obj){
@@ -224,9 +301,9 @@ namespace SQLRestC
     {
         public int id { get; set; }
         public String name { get; set; }
-        public DateTime createDate { get; set; }
         public double dataUsage { get; set; }
         public double indexUsage { get; set; }
+        public SchemaJson[] schemas{ get; set; }
     }
 
     public class SchemaJson
@@ -234,16 +311,26 @@ namespace SQLRestC
         public int id { get; set; }
         public String name { get; set; }
         public String owner { get; set; }
+        public TableJson[] tables { get; set; }
+        public ViewJson[] views { get; set; }
     }
 
     public class TableJson
     {
         public int id { get; set; }
         public String name { get; set; }
-        public DateTime createDate { get; set; }
         public double dataUsage { get; set; }
         public double indexUsage { get; set; }
         public String path { get; set; }
+        public ColumnJson[] columns { get; set; }
+    }
+
+    public class ViewJson
+    {
+        public int id { get; set; }
+        public String name { get; set; }
+        public String path { get; set; }
+        public ColumnJson[] columns { get; set; }
     }
 
     public class ColumnJson

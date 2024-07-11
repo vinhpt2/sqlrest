@@ -1,13 +1,13 @@
-var Com_SysRoleAssignmentFunction={
-	run:function(p){
+var SysRoleAssignmentUser={
+	run:function(p.records){
 		if(p.records.length){
 			this.app=p.parent;
 			this.role=p.records[0];
 			var self=this;
-			NUT.ds.select({url:NUT.URL+"sysrolefunction",select:"rolefunctionid,functionid",where:["roleid","=",self.role.roleid]},function(res){
+			NUT.ds.select({url:NUT.URL+"sysaccess",select:"accessid,userid",where:["roleid","=",self.role.roleid]},function(res){
 				var existUsers={};
 				for(var i=0;i<res.length;i++)existUsers[res[i].userid]=res[i].accessid;
-				NUT.ds.select({url:NUT.URL+"sysuser",where:["clientid","=",_context.user.clientid]},function(users){
+				NUT.ds.select({url:NUT.URL+"sysuser",where:["siteid","=",_context.user.siteid]},function(users){
 					if(users.length)self.showDlgRoleAssignmentUser(users,existUsers);
 				});
 			});
@@ -20,7 +20,7 @@ var Com_SysRoleAssignmentFunction={
 		var self=this;
 		var id="divCom_SysRoleAssignmentUser";
 		w2popup.open({
-			title: '📥 <i>Assign user for role</i> - '+this.role.rolename+"]",
+			title: '📥 <i>Assign user for role</i> - '+this.role.rolename,
 			modal:true,
 			width: 700,
 			height: 500,
@@ -55,7 +55,7 @@ var Com_SysRoleAssignmentFunction={
 				appid:this.app.appid,
 				roleid:this.role.roleid,
 				userid:userid,
-				clientid:_context.user.clientid
+				siteid:_context.user.siteid
 			};
 			NUT.ds.insert({url:NUT.URL+"sysaccess",data:data},function(res){
 				if(res.length)NUT.tagMsg("Record inserted.","lime");

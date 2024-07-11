@@ -1,4 +1,4 @@
-var Com_SysApplyWindowCache = {
+var SysApplyWindowCache = {
 	run: function (p) {
 		if(p.records.length){
 			this.window=p.records[0];
@@ -59,7 +59,7 @@ var Com_SysApplyWindowCache = {
 						var key=NUT.ERD.field[j];
 						if(key=="foreigntable"){
 							table=lookupTable[fields[i][key+"id"]];
-							self.cache.fields[i].push(table?table.urledit:null);
+							self.cache.fields[i].push(table ? table.viewname || table.tablename :null);
 						} else if (table && (key == "keycolumn" || key == "searchcolumn" || key =="displaycolumn"))
 							self.cache.fields[i].push(table[key]);
 						else self.cache.fields[i].push(fields[i][NUT.ERD.field[j]]);
@@ -85,7 +85,7 @@ var Com_SysApplyWindowCache = {
 		});
 	},
 	updateWindowCache:function(){
-		NUT.ds.update({url:NUT.URL+"n_cache",where:["windowid","=",this.window.windowid],data:{config:zipson.stringify(this.cache)}},function(res){
+		NUT.ds.update({url:NUT.URL+"n_cache",where:["windowid","=",this.window.windowid],data:{configjson:zipson.stringify(this.cache)}},function(res){
 			if (res.success)
 				NUT.notify("ℹ️ Window's cache updated.","lime");
 			else

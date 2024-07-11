@@ -45,7 +45,7 @@ var PgREST={
 		}
 
 		if(p.select)decode+="&select="+p.select;
-		if(_context.user.clientid&&p.url&&(p.url.includes("/sys")||p.url.includes("/nv_")))decode+="&clientid=eq."+(p.clientid!=undefined?p.clientid:_context.user.clientid);
+		if(_context.user.siteid&&p.url&&(p.url.includes("/sys")||p.url.includes("/nv_")))decode+="&siteid=eq."+(p.siteid!=undefined?p.siteid:_context.user.siteid);
 		if(p.order)decode+="&order="+p.order;
 		return decode;
 	},

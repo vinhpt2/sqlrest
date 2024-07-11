@@ -1,4 +1,4 @@
-var Com_SysPreviewWindow={
+var SysPreviewWindow={
 	run:function(p){
 		if(p.records.length){
 			var windowid=p.records[0].windowid;

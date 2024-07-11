@@ -3,6 +3,7 @@ using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
 using System.Collections;
 using System.IO;
+using System.Text.Json.Nodes;
 
 namespace SQLRestC.Controllers
 {
@@ -12,28 +13,14 @@ namespace SQLRestC.Controllers
     {
         //list all databases info
         [HttpGet]
-        public ResponseJson Gets(bool isSystem=false)
+        public ResponseJson GetAll(bool isDetail = false, bool isSystem=false)
         {
             Server server = null;
             try
             {
                 server = new Server(new ServerConnection(Global.server, Global.username, Global.password));
-                var jsonArr = new List<DatabaseJson>();
-                foreach (Database obj in server.Databases)
-                {
-                    if (obj.IsSystemObject == isSystem)
-                    {
-                        jsonArr.Add(new DatabaseJson
-                        {
-                            id = obj.ID,
-                            name = obj.Name,
-                            createDate = obj.CreateDate,
-                            dataUsage = obj.DataSpaceUsage,
-                            indexUsage = obj.IndexSpaceUsage
-                        });
-                    }
-                }
-                return new ResponseJson { success = true, result = jsonArr };
+                
+                return new ResponseJson { success = true, result = Global.getDatabaseInfo(server,isDetail,isSystem) };
                 
             } catch (Exception ex)
             {
@@ -48,7 +35,7 @@ namespace SQLRestC.Controllers
 
         //get database info by name
         [HttpGet("{name}")]
-        public ResponseJson Get(String name)
+        public ResponseJson Get(String name, bool isDetail = false)
         {
             Server server = null;
             try
@@ -62,9 +49,9 @@ namespace SQLRestC.Controllers
                     {
                         id = obj.ID,
                         name = obj.Name,
-                        createDate = obj.CreateDate,
                         dataUsage = obj.DataSpaceUsage,
-                        indexUsage = obj.IndexSpaceUsage
+                        indexUsage = obj.IndexSpaceUsage,
+                        schemas = isDetail ? Global.getSchemaInfo(obj, obj.IsSystemObject) : null
                     };
                 }
                 else response.result = "Database '" + name + "' not found!";

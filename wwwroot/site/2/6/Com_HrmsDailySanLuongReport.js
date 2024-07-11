@@ -25,7 +25,7 @@ var Com_HrmsDailySanLuongReport={
 		if(numTinhCong_Year.value&&numTinhCong_Month.value){
 			NUT.ds.select({url:_context.service["hrms"].urledit+"rpt_dailysanluong",where:[["nam","=",numTinhCong_Year.value],["thang","=",numTinhCong_Month.value],["madoitac","=",cboTinhCong_DoiTac.value],["thitruong","=",cboTinhCong_ThiTruong.value],["dulieu","=",chkTinhCong_Edit.checked?1:0]]},function(res){
 				if(res.length){
-					var win=window.open("client/"+_context.user.clientid+"/html/DailySanLuongReport.html");
+					var win=window.open("client/"+_context.user.siteid+"/html/DailySanLuongReport.html");
 					win.onload=function(){
 						this.labThangNam.innerHTML=numTinhCong_Month.value+"/"+numTinhCong_Year.value;
 						this.labThiTruong.innerHTML=cboTinhCong_ThiTruong.value;

@@ -1,4 +1,4 @@
-var Com_SysAddMissField={
+var SysAddMissField={
 	run:function(p){
 		if(p.records.length){
 			this.tab=p.records[0];
@@ -35,7 +35,7 @@ var Com_SysAddMissField={
 							isreadonly:col.isprikey,
 							isunique:col.isprikey,
 							columnid:col.columnid,
-							clientid:_context.user.clientid
+							siteid:_context.user.siteid
 						};
 						if(col.foreigntableid)fld.fieldtype=col.isfromdomain?"select":"search";
 						else fld.fieldtype=col.columntype;

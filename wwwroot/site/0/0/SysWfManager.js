@@ -1,4 +1,4 @@
-var Com_SysWfManager={
+var SysWfManager={
 	run:function(div){
 		this.div=div;
 		var self=this;

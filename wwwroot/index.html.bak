@@ -77,15 +77,15 @@ function init(){
 							NUT.loginUser=res[0];
 							localStorage.setItem(NUT.I_USER,btoa(self.record.Username));
 							localStorage.setItem(NUT.I_PASS,self.record.savePassword?btoa(self.recordPassword):"");
-							NUT.ds.select({url:NUT.URL+"sysclient",where:["clientid","=",_context.user.clientid]},function(clients){
+							NUT.ds.select({url:NUT.URL+"sysclient",where:["siteid","=",_context.user.siteid]},function(clients){
 								if(clients.length){
 									var client=clients[0];
-									_context.client={clientid:client.clientid,name:client.clientname,desc:client.description,icon:client.iconclient,code:client.clientcode,backimg:client.imagebackground};
+									_context.client={siteid:client.siteid,name:client.clientname,desc:client.description,icon:client.iconclient,code:client.clientcode,backimg:client.imagebackground};
 									labLoginClient.innerHTML=_context.client.name;
 									labLoginClient.title=_context.client.desc;
 									labLoginUser.innerHTML=_context.user.username;
 									labLoginUser.title=_context.user.description;	
-									imgClientLogo.src="client/"+_context.client.clientid+"/img/"+ _context.client.icon;
+									imgClientLogo.src="client/"+_context.client.siteid+"/img/"+ _context.client.icon;
 									openMain();
 									renderMain(_context.client);
 								}

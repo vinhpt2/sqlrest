@@ -25,7 +25,7 @@ var Com_HrmsMonthlyMS02Report={
 		if(numTinhCong_Year.value&&numTinhCong_Month.value){
 			NUT.ds.select({url:_context.service["hrms"].urledit+"rpt_dailycheckinout",where:[["nam","=",numTinhCong_Year.value],["thang","=",numTinhCong_Month.value],["madoitac","=",cboTinhCong_DoiTac.value],["thitruong","=",cboTinhCong_ThiTruong.value],["dulieu","=",chkTinhCong_Edit.checked?1:0]]},function(res){
 				if(res.length){
-					var win=window.open("client/"+_context.user.clientid+"/html/MonthlyMS02Report.html");
+					var win=window.open("client/"+_context.user.siteid+"/html/MonthlyMS02Report.html");
 					win.onload=function(){
 						this.labThangNam.innerHTML="THÁNG "+numTinhCong_Month.value+" NĂM "+numTinhCong_Year.value;
 						this.labThiTruong.innerHTML=cboTinhCong_ThiTruong.value;

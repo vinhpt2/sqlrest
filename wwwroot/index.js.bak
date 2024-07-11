@@ -52,15 +52,15 @@ function body_onLoad(){
 					if(res.length==1){
 						_context.user=res[0];
 						NUT.setStorageUser(record.Username,record.Password,record.SavePassword);
-						NUT.ds.select({url:NUT.URL+"sysclient",where:["clientid","=",_context.user.clientid]},function(clients){
+						NUT.ds.select({url:NUT.URL+"sysclient",where:["siteid","=",_context.user.siteid]},function(clients){
 							if(clients.length){
 								var client=clients[0];
-								_context.client={clientid:client.clientid,name:client.clientname,desc:client.description,icon:client.iconclient,code:client.clientcode,backimg:client.imagebackground};
+								_context.client={siteid:client.siteid,name:client.clientname,desc:client.description,icon:client.iconclient,code:client.clientcode,backimg:client.imagebackground};
 								labLoginClient.innerHTML=_context.client.name;
 								labLoginClient.title=_context.client.desc;
 								labLoginUser.innerHTML=_context.user.username;
 								labLoginUser.title=_context.user.description;	
-								imgClientLogo.src="client/"+_context.client.clientid+"/img/"+ _context.client.icon;
+								imgClientLogo.src="client/"+_context.client.siteid+"/img/"+ _context.client.icon;
 								openMain();
 								renderMain(_context.client);
 							}
@@ -77,8 +77,8 @@ function body_onLoad(){
 }
 function renderMain(info){
 	if(!info)info=_context.client;
-	divMain.innerHTML="<div id='divTitle' style='padding:10px'><img width='64' height='64' src='client/"+info.clientid+"/img/"+info.icon+"'><br/><h2 style='color:brown'>"+info.name+"</h2><hr/><h3><i>"+info.desc+"</i><h3/></div>";
-	if(info.backimg)divMain.style.backgroundImage="url('client/"+info.clientid+"/img/"+info.backimg+"')";
+	divMain.innerHTML="<div id='divTitle' style='padding:10px'><img width='64' height='64' src='client/"+info.siteid+"/img/"+info.icon+"'><br/><h2 style='color:brown'>"+info.name+"</h2><hr/><h3><i>"+info.desc+"</i><h3/></div>";
+	if(info.backimg)divMain.style.backgroundImage="url('client/"+info.siteid+"/img/"+info.backimg+"')";
 }
 function labLoginUser_onClick(){
 	$(labLoginUser).w2menu({
@@ -127,7 +127,7 @@ function openMain() {
 					if(data.roleid)_context.apps[id].roles.push(data.roleid);
 				}else{
 					id=data.appid;
-					_context.apps[id]={clientid:data.appclientid,appid:id,name:data.applicationname,link:data.linkurl,type:data.applicationtype,icon:data.icon,code:data.colorcode,desc:data.description,roles:[data.roleid]};
+					_context.apps[id]={siteid:data.appclientid,appid:id,name:data.applicationname,link:data.linkurl,type:data.applicationtype,icon:data.icon,code:data.colorcode,desc:data.description,roles:[data.roleid]};
 					html+="<div class='nut-tile' style='background:"+data.colorcode+"' onclick='openApplication("+id+")' onmouseover='labApp.innerHTML=\""+data.description+"\"'><img src='client/"+data.appclientid+"/img/"+data.icon+"'><br/>"+data.applicationname+"</div>";
 				}
 			}
@@ -146,7 +146,7 @@ function openApplication(idApp){
 	_context.curApp=_context.apps[idApp];
 	
 	if(_context.curApp.type=="engine"){
-		window.open(_context.curApp.link+"?username="+_context.user.username+"&clientid="+_context.user.clientid);
+		window.open(_context.curApp.link+"?username="+_context.user.username+"&siteid="+_context.user.siteid);
 		labCurrentApp.innerHTML="";
 	}else {
 		var isGis=(_context.curApp.type=="gis");
@@ -190,21 +190,21 @@ function openApplication(idApp){
 			renderMain(_context.curApp);
 		}
 		//load domain
-		NUT.ds.select({url:NUT.URL+"sysdomain",clientid:_context.curApp.clientid,where:["appid","=",idApp]},function(res){
+		NUT.ds.select({url:NUT.URL+"sysdomain",siteid:_context.curApp.siteid,where:["appid","=",idApp]},function(res){
 			_context.domain=NUT.configDomain(res);
 		});
 		//load service
-		NUT.ds.select({url:NUT.URL+"nv_appservice_service",clientid:_context.curApp.clientid,where:["appid","=",idApp]},function(res){
+		NUT.ds.select({url:NUT.URL+"nv_appservice_service",siteid:_context.curApp.siteid,where:["appid","=",idApp]},function(res){
 			_context.service={};
 			for(var i=0;i<res.length;i++)_context.service[res[i].servicename]=res[i];
 		});
-		NUT.ds.select({url:NUT.URL+"nv_rolemenu_menuitem",clientid:_context.curApp.clientid,where:[["menuitemtype","=","menu"],["appid","=",idApp],["roleid","in",_context.curApp.roles]]},function(res){
+		NUT.ds.select({url:NUT.URL+"nv_rolemenu_menuitem",siteid:_context.curApp.siteid,where:[["menuitemtype","=","menu"],["appid","=",idApp],["roleid","in",_context.curApp.roles]]},function(res){
 			var ids={},pids={};
 			for(var i=0;i<res.length;i++){
 				if(res[i].menuitemid)ids[res[i].menuitemid]=true;
 				if(res[i].parentid)pids[res[i].parentid]=true;
 			}
-			NUT.ds.select({url:NUT.URL+"sysmenuitem",clientid:_context.curApp.clientid,orderby:"seqno",where:["or",["menuitemid","in",Object.keys(ids)],["menuitemid","in",Object.keys(pids)]]},function(menuitems){
+			NUT.ds.select({url:NUT.URL+"sysmenuitem",siteid:_context.curApp.siteid,orderby:"seqno",where:["or",["menuitemid","in",Object.keys(ids)],["menuitemid","in",Object.keys(pids)]]},function(menuitems){
 				var nodes=[], lookup={}, openWindowId=null;
 				for(var i=0;i<menuitems.length;i++){
 					var menuitem=menuitems[i];
@@ -227,7 +227,7 @@ function openApplication(idApp){
 					}});
 				
 				if(openWindowId)menu_onClick({item:{tag:openWindowId}});
-				labCurrentApp.innerHTML="<img src='client/"+_context.curApp.clientid+"/img/"+_context.curApp.icon+"' width='20' height='20'/> "+_context.curApp.name;
+				labCurrentApp.innerHTML="<img src='client/"+_context.curApp.siteid+"/img/"+_context.curApp.icon+"' width='20' height='20'/> "+_context.curApp.name;
 				labCurrentApp.title=_context.curApp.desc;
 			});
 		});
@@ -291,7 +291,7 @@ function menu_onClick(evt){
 				a.innerHTML=conf.windowname;
 			}else{
 				//a.div.innerHTML="<img src='img/wait.gif'/>";
-				NUT.ds.select({url:NUT.URL+"syscache",clientid:_context.curApp.clientid,where:["windowid","=",tag]},function(res){
+				NUT.ds.select({url:NUT.URL+"syscache",siteid:_context.curApp.siteid,where:["windowid","=",tag]},function(res){
 					if(res.length){
 						conf=NUT.configWindow(zipson.parse(res[0].config),JSON.parse(res[0].layout));
 						if(conf.execname)runComponent(conf.execname,a.div);

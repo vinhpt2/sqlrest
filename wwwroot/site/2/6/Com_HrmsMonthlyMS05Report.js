@@ -28,7 +28,7 @@ var Com_HrmsMonthlyMS05Report={
 				if(phucaps.length)NUT.ds.select({url:url+"rpt_monthlysum",where:[["nam","=",numTinhCong_Year.value],["thang","=",numTinhCong_Month.value],["madoitac","=",cboTinhCong_DoiTac.value],["dulieu","=",chkTinhCong_Edit.checked?1:0]]},function(res){
 					if(res.length){
 						var pcPG=phucaps[0];
-						var win=window.open("client/"+_context.user.clientid+"/html/MonthlyMS05Report.html");
+						var win=window.open("client/"+_context.user.siteid+"/html/MonthlyMS05Report.html");
 						win.onload=function(){
 							this.labThangNam.innerHTML=numTinhCong_Year.value+"/"+numTinhCong_Month.value;
 							var oldMaNhanVien=null;
