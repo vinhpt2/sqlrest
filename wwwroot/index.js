@@ -19,6 +19,8 @@ window.onload = function () {
 	document.body.innerHTML = "<div id='divLogin'></div>";
 	w2utils.locale(localStorage.getItem(NUT.I_LANG) || w2utils.settings.locale).then(function (evt) { 
 		n$.lang = evt.data.locale.substr(0, 2);
+		var suser = localStorage.getItem(NUT.I_USER);
+		var spass = localStorage.getItem(NUT.I_PASS);
 		(w2ui["frmLogin"] || new w2form({
 			name: "frmLogin",
 			style: "width:360px;height:220px;top:30%;margin:auto",
@@ -28,7 +30,7 @@ window.onload = function () {
 				{ field: 'password', type: 'password', html: { label: "_Password" } },
 				{ field: 'savepass', type: 'checkbox', html: { label: "_Save password" } },
 			],
-			record: localStorage.getItem(NUT.I_PASS) ? { username: atob(localStorage.getItem(NUT.I_USER)), password: atob(localStorage.getItem(NUT.I_PASS)), savepass: true } : { username: atob(localStorage.getItem(NUT.I_USER)), password: "", savepass: false },
+			record: { username: suser, password: spass||"", savepass: spass },
 			actions: [
 				{
 					text: "_Help",
@@ -41,71 +43,11 @@ window.onload = function () {
 					class: "w2ui-btn-blue",
 					onClick: function () {
 						NUT.loading(divLogin);
-						var self = this;
-						NUT.ds.login({ url: NUT.URL_TOKEN, data: [this.record.username, this.record.password]}, function (res) {
-							if (res.success) {
-								n$.user = res.result;
-								SqlREST.token = "Bearer " + n$.user.token;
-								localStorage.setItem(NUT.I_USER, btoa(self.record.username));
-								localStorage.setItem(NUT.I_PASS, self.record.savepass ? btoa(self.record.password) : "");
-
-								(w2ui["layMain"] || new w2layout({
-									name: "layMain",
-									style: "width:100%;height:100%;top:0;margin:0",
-									panels: [
-										{ type: 'top', size: 38, html: '<div id="divTop" class="nut-full"></div>' },
-										{ type: 'left', size: 300, resizable: true, html: '<div id="divLeft" class="nut-full"></div>', hidden: true },
-										{ type: 'main', html: '<div id="divMain" class="nut-full" style="background:url(\'site/' + n$.user.siteid + '/back.png\');background-size:cover"><div id="divApp" style="position:absolute;width:100%;top:30%"></div><div id="divTool" style="position:absolute;width:100%;bottom:10px"></div></div>' }
-									],
-								})).render(divLogin);
-
-								(w2ui["tbrTop"] || new w2toolbar({
-									name: "tbrTop",
-									items: [
-										{ type: 'html', id: 'logo', html: '<img height="24" src="site/' + n$.user.siteid + '/logo.png"/>' },
-										{ type: 'html', id: 'site', html: '<div><b>' + n$.user.sitename + '</b><br/>' + NUT.translate(n$.user.sitedesc)+"</div>" },
-										{ type: 'spacer', id: "divSpace"},
-										{ type: 'break' },
-										{ type: 'button', id: "home", icon: "nut-i-home", tooltip: "_Home" },
-										{ type: 'button', id: "notify", icon: "nut-i-notification", tooltip: "_Notify" },
-										{ type: 'button', id: "job", icon: "nut-i-information", tooltip: "_Job" },
-										{ type: 'break' },
-										{
-											type: 'menu', id: 'user', text: n$.user.username, items: [
-												{ id: 'profile', text: '_Profile' },
-												{ id: 'changepass', text: '_Change password' },
-												{ text: '--' },
-												{ id: 'logout', text: '_Logout' }]
-										},
-										{ type: 'break' },
-										{ type: 'button', id: "app", icon: "nut-i-switcher", tooltip: "_Applications" }
-									],
-									onClick(evt) {
-										if (evt.target == "user:profile") {
-											w2alert("<table><tr><td><b><i>Tài khoản:</i></b></td><td colspan='3'>" + n$.user.username + "</td></tr><tr><td><b><i>Họ tên:</i></b></td><td colspan='3'>" + n$.user.fullname + "</td></tr><tr><td><b><i>Điện thoại:</i></b></td><td>" + n$.user.phone + "</td><td><b><i>Nhóm:</i></b></td><td>" + n$.user.groupid + "</td></tr><tr><td><b><i>Trạng thái:</i></b></td><td>" + n$.user.status + "</td><td><b><i>Ghi chú:</i></b></td><td>" + n$.user.description + "</td></tr></table>", "<b>ℹ️ Information #<i>" + n$.user.userid + "</i></b>");
-										}
-										else if (evt.target == "user:changepass") {
-											w2popup.open({
-												title: "🔑 <i>Change password</i>",
-												speed: 0,
-												width: 400,
-												height: 210,
-												body: "<table style='margin:auto'><tr><td>*Old password:</b></td><td><input id='txtUser_PasswordOld' type='password'/></td></tr><tr><td>*New password:</b></td><td><input id='txtUser_PasswordNew' type='password'/></td></tr><tr><td>*Re-type password:</b></td><td><input id='txtUser_PasswordNew2' type='password'/></td></tr></table>",
-												buttons: '<button class="w2ui-btn" onclick="w2popup.close()">⛌ Close</button><button class="w2ui-btn" onclick="userChangePassword()">✔️ Ok</button>'
-											});
-										}
-										else if (evt.target == "user:logout") {
-											w2ui.layMain.hide("left");
-											location.reload();
-										}
-									}
-								})).render(divTop);
-
-								openDesktop();
-								//renderMain();
-							} else NUT.notify("⛔ ERROR: " + res.result, "red");
-							NUT.loading();
-						}, true);
+						var rec = this.record;
+						spass == rec.password ? login(rec.username,rec.password,rec.savepass):
+						w2utils.sha256(rec.password).then(function(md5) {
+							login(rec.username, md5,rec.savepass);
+						});
 					}
 				}
 			]
@@ -120,6 +62,73 @@ window.onload = function () {
 		}
 		divLogin.appendChild(cboLang);
 	})
+}
+
+function login(user,pass,save) {
+	NUT.ds.login({ url: NUT.URL_TOKEN, data: [user, pass] }, function (res) {
+		if (res.success) {
+			n$.user = res.result;
+			SqlREST.token = "Bearer " + n$.user.token;
+			localStorage.setItem(NUT.I_USER, user);
+			localStorage.setItem(NUT.I_PASS, save ? pass : "");
+
+			(w2ui["layMain"] || new w2layout({
+				name: "layMain",
+				style: "width:100%;height:100%;top:0;margin:0",
+				panels: [
+					{ type: 'top', size: 38, html: '<div id="divTop" class="nut-full"></div>' },
+					{ type: 'left', size: 300, resizable: true, html: '<div id="divLeft" class="nut-full"></div>', hidden: true },
+					{ type: 'main', html: '<div id="divMain" class="nut-full" style="background:url(\'site/' + n$.user.siteid + '/back.png\');background-size:cover"><div id="divApp" style="position:absolute;width:100%;top:30%"></div><div id="divTool" style="position:absolute;width:100%;bottom:10px"></div></div>' }
+				],
+			})).render(divLogin);
+
+			(w2ui["tbrTop"] || new w2toolbar({
+				name: "tbrTop",
+				items: [
+					{ type: 'html', id: 'logo', html: '<img height="24" src="site/' + n$.user.siteid + '/logo.png"/>' },
+					{ type: 'html', id: 'site', html: '<div><b>' + n$.user.sitename + '</b><br/>' + NUT.translate(n$.user.sitedesc) + "</div>" },
+					{ type: 'spacer', id: "divSpace" },
+					{ type: 'break' },
+					{ type: 'button', id: "home", icon: "nut-i-home", tooltip: "_Home" },
+					{ type: 'button', id: "notify", icon: "nut-i-notification", tooltip: "_Notify" },
+					{ type: 'button', id: "job", icon: "nut-i-information", tooltip: "_Job" },
+					{ type: 'break' },
+					{
+						type: 'menu', id: 'user', text: n$.user.username, items: [
+							{ id: 'profile', text: '_Profile' },
+							{ id: 'changepass', text: '_Change password' },
+							{ text: '--' },
+							{ id: 'logout', text: '_Logout' }]
+					},
+					{ type: 'break' },
+					{ type: 'button', id: "app", icon: "nut-i-switcher", tooltip: "_Applications" }
+				],
+				onClick(evt) {
+					if (evt.target == "user:profile") {
+						w2alert("<table><tr><td><b><i>Tài khoản:</i></b></td><td colspan='3'>" + n$.user.username + "</td></tr><tr><td><b><i>Họ tên:</i></b></td><td colspan='3'>" + n$.user.fullname + "</td></tr><tr><td><b><i>Điện thoại:</i></b></td><td>" + n$.user.phone + "</td><td><b><i>Nhóm:</i></b></td><td>" + n$.user.groupid + "</td></tr><tr><td><b><i>Trạng thái:</i></b></td><td>" + n$.user.status + "</td><td><b><i>Ghi chú:</i></b></td><td>" + n$.user.description + "</td></tr></table>", "<b>ℹ️ Information #<i>" + n$.user.userid + "</i></b>");
+					}
+					else if (evt.target == "user:changepass") {
+						w2popup.open({
+							title: "🔑 <i>Change password</i>",
+							speed: 0,
+							width: 400,
+							height: 210,
+							body: "<table style='margin:auto'><tr><td>*Old password:</b></td><td><input id='txtUser_PasswordOld' type='password'/></td></tr><tr><td>*New password:</b></td><td><input id='txtUser_PasswordNew' type='password'/></td></tr><tr><td>*Re-type password:</b></td><td><input id='txtUser_PasswordNew2' type='password'/></td></tr></table>",
+							buttons: '<button class="w2ui-btn" onclick="w2popup.close()">⛌ Close</button><button class="w2ui-btn" onclick="userChangePassword()">✔️ Ok</button>'
+						});
+					}
+					else if (evt.target == "user:logout") {
+						w2ui.layMain.hide("left");
+						location.reload();
+					}
+				}
+			})).render(divTop);
+
+			openDesktop();
+			//renderMain();
+		} else NUT.notify("⛔ ERROR: " + res.result, "red");
+		NUT.loading();
+	}, true);
 }
 
 function openDesktop() {
