@@ -19,7 +19,7 @@ namespace SQLRestC.Controllers
     {
         //select data in table
         [HttpGet]
-        public ResponseJson Select(String database, String schema, String table, String select = null, String where = null, String groupby = null, String having = null, String orderby = null, int offset = 0, int limit = 0)
+        public ResponseJson Select(String database, String schema, String table, String? select, String? where, String? groupby, String? having, String? orderby, int offset=0, int limit=0)
         {
             Server server = null;
             try
@@ -30,7 +30,7 @@ namespace SQLRestC.Controllers
                 if (response.success)
                 {
                     var from = " from " + database + "." + schema + "." + table;
-                    var sql = "select " + (select == null ? "*" : select) + from;
+                    var sql = "select " + (select==null?"*":select) + from;
                     if (where != null) sql += " where " + where;
                     if (groupby != null) sql += " group by " + groupby;
                     if (having != null) sql += " having " + having;
@@ -84,7 +84,7 @@ namespace SQLRestC.Controllers
         //select data in table by id
         //table must have one column primary key
         [HttpGet("{id}")]
-        public ResponseJson SelectById(String database, String schema, String table, String id, String orderby = null)
+        public ResponseJson SelectById(String database, String schema, String table, String id, String? orderby)
         {
             Server server = null;
             try

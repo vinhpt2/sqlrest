@@ -1,6 +1,6 @@
 ﻿var n$ = {
 	user: null,
-	winid: null,
+	windowid: null,
 	extent: null,
 	layer: null,
 	app: null,
@@ -20,23 +20,25 @@
 	}
 }
 var NUT = {
-	URL: "https://localhost:7006/rest/nut/dbo/data/",
+	URL: "https://localhost:7006/rest/nut/nut/data/",
 	URL_TOKEN: "https://localhost:7006/rest/token/nut",
 	ds: null,
 	apps: {},
-	wins: {},
+	windows: {},
 	domains: {},
-	urls: {},
+	tables: {},
+	relates: {},
+	services: {},
 	isMobile : (window.orientation !== undefined),
 	ERD:{
 		window: ["windowid", "windowname", "windowtype", "appid", "execname", "isopensearch", "translate"],
-		tab: ["tabid", "parenttabid", "tabname", "tablevel", "seqno", "layoutcols", "linkchildfield", "linkparentfield", "linktable", "whereclause", "orderbyclause", "tableid", "windowid", "midchildfield", "midparentfield", "midtable", "tablename", "viewname", "columnkey", "columncode", "columndisplay", "columnlock", "columnorg", "isattachment", "serviceid", "midtable_prikey", "geotableid", "filterfield", "filterdefault", "beforechange", "afterchange", "isnotinsert", "isnotupdate", "isnotdelete", "isnotarchive", "isnotlock","archivetype","translate"],
-		field: ["fieldid", "fieldname", "translate", "isdisplaygrid", "isdisplay", "issearch", "displaylength", "seqno", "isreadonly", "fieldlength", "vformat", "defaultvalue", "isrequire", "isfrozen", "fieldgroup", "tabid", "columnid", "fieldtype", "foreigntable", "columnkey", "columndisplay", "domainid", "issearchtonghop", "foreigntableid", "columncode", "parentfieldid", "wherefieldname", "displaylogic", "placeholder", "calculation", "columntype", "colspan", "rowspan", "isprikey", "columndohoa", "foreignwindowid","columnname"],
+		tab: ["tabid", "parenttabid", "tabname", "tablevel", "seqno", "layoutcols", "linkchildfield", "linkparentfield", "linktableid", "whereclause", "orderbyclause", "tableid", "windowid", "relatechildfield", "relateparentfield", "relatetableid", "filterfield", "filterdefault", "isnotinsert", "isnotupdate", "isnotdelete", "isarchive", "islock", "isautosave", "translate"],
+		field: ["fieldid", "fieldname", "translate", "isdisplaygrid", "isdisplayform", "issearch", "displaylength", "seqno", "isreadonly", "fieldlength", "vformat", "defaultvalue", "isrequire", "isfrozen", "fieldgroup", "tabid", "columnid", "fieldtype", "linktableid", "domainid", "issearchtonghop", "parentfieldid", "wherefieldname", "placeholder", "calculation", "colspan", "rowspan", "geocolumn", "linkwindowid","columnname","tableid","whereclause","bindfieldname","options","columntype"],
 		menu:["menuid","menuname","parentid","seqno","translate","issummary","appid","windowid","siteid","tabid","menutype","execname","icon"]
 	},
-	I_USER:btoa("_USER"),
-	I_PASS: btoa("_PASS"),
-	I_LANG: btoa("_LANG"),
+	I_USER:"_USER",
+	I_PASS: "_PASS",
+	I_LANG: "_LANG",
 	LAYOUT_COLS : 3,
 	GRID_LIMIT : 100,
 	z: function (config) {// tag, attribute, childrens
@@ -66,16 +68,20 @@ var NUT = {
 		return domain;
 	},
 	configWindow: function (conf,layout){
-		var lookupTab={},lookupField={},lookupFieldName={},layoutFields={};
+		var lookupTab = {}, lookupField = {}, lookupFieldName = {}, layoutFields = {};
 		var winconf={tabs:[],needCache:{}};
 		for(var i=0;i<NUT.ERD.window.length;i++)
 			winconf[NUT.ERD.window[i]]=conf.window[i];
-		if(conf.tabs){
-			for(var i=0;i<conf.tabs.length;i++){
-				var tab={fields:[],tabs:[],menus:[],children:[],maxLevel:0};
+		if (conf.tabs) {
+			for (var i = 0; i < conf.tabs.length; i++) {
+				var tab = { fields: [], tabs: [], menus: [], children: [], maxLevel: 0 };
 				for (var j = 0; j < NUT.ERD.tab.length; j++) {
-					tab[NUT.ERD.tab[j]] = conf.tabs[i][j];
-					if(NUT.ERD.tab[j] == "serviceid")tab.url=NUT.urls[conf.tabs[i][j]]+"data/";
+					var key = NUT.ERD.tab[j];
+					var val = conf.tabs[i][j];
+					tab[key] = val;
+					if (key == "tableid" && val) tab.table = NUT.tables[val];
+					if (key == "linktableid" && val) tab.linktable = NUT.tables[val];
+					if (key == "relatetableid" && val) tab.relatetable = NUT.tables[val];
 				}
 				if(layout){
 					tab.layout=document.createElement("div");
@@ -96,11 +102,10 @@ var NUT = {
 					}
 				}
 				if(tab.tablevel==0)winconf.tabs.push(tab);
-				lookupTab[tab.tabid]=tab;
+				lookupTab[tab.tabid] = tab;
 				if(tab.parenttabid){
 					var parentTab=lookupTab[tab.parenttabid];
 					parentTab.children.push(tab);
-					//tab.parentTab=parentTab;
 					if(tab.tablevel>0){
 						if(tab.tablevel>parentTab.tablevel){
 							parentTab.tabs.push(tab);
@@ -109,22 +114,40 @@ var NUT = {
 							lookupTab[parentTab.parenttabid].tabs.push(tab);
 						}
 					}
+					//n-n relationship
+					var rel = NUT.relates[tab.tableid + "_" + parentTab.tableid] || NUT.relates[parentTab.tableid + "_" + tab.tableid];
+					if (rel) {
+						var child = (rel[0].linktableid == tab.tableid ? rel[0] : rel[1]);
+						var parent = (rel[0].linktableid == parentTab.tableid ? rel[0] : rel[1]);
+						tab.relatetable = NUT.tables[child.tableid];
+						tab.relatechildfield = child.columnname;
+						tab.relateparentfield = parent.columnname;
+					}
 				}
 			}
 			for(var i=0;i<conf.fields.length;i++){
 				if(!layout||layoutFields[conf.fields[i][0]]){
 					var field={windowid:winconf.windowid,children:[]};
-					for(var j=0;j<NUT.ERD.field.length;j++)
-						field[NUT.ERD.field[j]]=conf.fields[i][j];
-					var tab=lookupTab[field.tabid];
+					for (var j = 0; j < NUT.ERD.field.length; j++) {
+						var key = NUT.ERD.field[j];
+						var val = conf.fields[i][j];
+						field[key] = val;
+						if (key == "linktableid" && val) field.linktable = NUT.tables[val];
+					}
+					var tab = lookupTab[field.tabid];
 					tab.fields.push(field);
 					lookupField[field.fieldid]=field;
-					lookupFieldName[tab.tabname+"."+field.fieldname]=field;
-					if(field.fieldtype=="select"&&!(field.domainid||field.parentfieldid||winconf.needCache[field.foreigntable_url]))
-						winconf.needCache[field.foreigntable_url]=field;
+					lookupFieldName[tab.tablename + "." + field.columnname] = field;
+					if (field.linktableid) {
+						winconf.needCache[field.linktableid] = field;
+						if (tab.parenttabid == field.linktableid) {//1-n relationship
+							tab.linktable = field.linktable;
+							tab.linkchildfield = field.columnname;
+							tab.linkparentfield = lookupTab[tab.parenttabid].columnkey;
+						}
+					}
 				}
 			}
-			
 			for(var key in lookupField)if(lookupField.hasOwnProperty(key)){
 				var field=lookupField[key];
 				/*if(field.calculation){
@@ -188,7 +211,7 @@ var NUT = {
 		return winconf;
 	},
 	createWindowTitle:function(id, divTitle, appName){
-		if (n$.winid) {
+		if (n$.windowid) {
 			for (var i = 0; i < divTitle.childNodes.length; i++) {
 				var node = divTitle.childNodes[i].firstChild;
 				node.style.color = "gray";
@@ -225,7 +248,7 @@ var NUT = {
 				children[i].firstChild.style.color = "gray";
 			this.style.color = "";
 
-			n$.winid = this.tag;
+			n$.windowid = this.tag;
 		};
 		span.appendChild(a);
 
@@ -237,9 +260,9 @@ var NUT = {
 			var title = this.parentNode.parentNode;
 			this.previousElementSibling.div.remove();
 			this.parentNode.remove();
-			if (this.tag == n$.winid) {
+			if (this.tag == n$.windowid) {
 				if (title.childNodes.length) title.childNodes[0].firstChild.onclick();
-				else n$.winid = null;
+				else n$.windowid = null;
 			}
 		}
 		span.appendChild(close);

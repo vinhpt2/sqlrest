@@ -113,17 +113,11 @@ var SysBuildTab={
 					for (var i = 0; i < columns.length; i++) {
 						var col = columns[i];
 						if (col.columnname == "seqno") tab.orderbyclause = "seqno";
-						if (parenttab && !col.domainid) {
-							if (parenttab.tableid == col.foreigntableid) {
-								tab.truonglienketcon = tab.truonglienketcha = col.columnname;
-								tab.banglienketid = parenttab.tableid;
-							}
-						}
 						var fld = {
 							fieldname: col.alias||col.columnname,
-							fieldtype: col.foreigntableid || col.domainid ? "select" : col.columntype,
+							fieldtype: col.linktableid || col.domainid ? "select" : col.datatype,
 							isdisplaygrid: true,
-							isdisplay: true,
+							isdisplayform: true,
 							issearch: true,
 							seqno: col.seqno,
 							fieldlength: col.length,

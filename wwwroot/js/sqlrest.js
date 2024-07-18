@@ -2,7 +2,7 @@ export class SqlREST{
 	static token = null;
 	static OPERATOR = {
 		"is":" is ",
-		"!is":" not is ",
+		"!is":" is not ",
 		"like":" like ",
 		"!like":" not like ",
 		"in":" in(",
@@ -50,7 +50,6 @@ export class SqlREST{
 		}
 
 		
-		//if(_context.user.siteid&&p.url&&(p.url.includes("/sys")||p.url.includes("/nv_")))decode+=" and siteid="+(p.siteid!=undefined?p.siteid:_context.user.siteid);
 		if (p.select) decode += "&select=" + p.select;
 		if (p.orderby) decode += "&orderby=" + p.orderby;
 		return decode;
