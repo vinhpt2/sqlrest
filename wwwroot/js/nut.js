@@ -115,13 +115,15 @@ var NUT = {
 						}
 					}
 					//n-n relationship
-					var rel = NUT.relates[tab.tableid + "_" + parentTab.tableid] || NUT.relates[parentTab.tableid + "_" + tab.tableid];
-					if (rel) {
-						var child = (rel[0].linktableid == tab.tableid ? rel[0] : rel[1]);
-						var parent = (rel[0].linktableid == parentTab.tableid ? rel[0] : rel[1]);
-						tab.relatetable = NUT.tables[child.tableid];
-						tab.relatechildfield = child.columnname;
-						tab.relateparentfield = parent.columnname;
+					if (!tab.relatetableid) {
+						var rel = NUT.relates[tab.tableid + "_" + parentTab.tableid] || NUT.relates[parentTab.tableid + "_" + tab.tableid];
+						if (rel) {
+							var child = (rel[0].linktableid == tab.tableid ? rel[0] : rel[1]);
+							var parent = (rel[0].linktableid == parentTab.tableid ? rel[0] : rel[1]);
+							tab.relatetable = NUT.tables[child.tableid];
+							tab.relatechildfield = child.columnname;
+							tab.relateparentfield = parent.columnname;
+						}
 					}
 				}
 			}
@@ -138,12 +140,17 @@ var NUT = {
 					tab.fields.push(field);
 					lookupField[field.fieldid]=field;
 					lookupFieldName[tab.tablename + "." + field.columnname] = field;
+					
 					if (field.linktableid) {
 						winconf.needCache[field.linktableid] = field;
-						if (tab.parenttabid == field.linktableid) {//1-n relationship
-							tab.linktable = field.linktable;
-							tab.linkchildfield = field.columnname;
-							tab.linkparentfield = lookupTab[tab.parenttabid].columnkey;
+						//1-n relationship
+						if (!tab.linktableid && tab.parenttabid) {
+							var parentTab = lookupTab[tab.parenttabid];
+							if (parentTab.tableid == field.linktableid) {
+								tab.linktable = field.linktable;
+								tab.linkchildfield = field.columnname;
+								tab.linkparentfield = parenttab.columnkey;
+							}
 						}
 					}
 				}

@@ -364,10 +364,10 @@ export class NWin {
 										if(this.validate(true).length)return;
 										var recRelate=null;
 										if(conf.parenttabid){
-											var parentKey=grid.parentRecord[conf.parentlinkfield];
+											var parentKey=grid.parentRecord[conf.linkparentfield];
 											if(conf.relatetable){//lien ket n-n
 												recRelate ={};
-												recRelate[conf.parentrelatefield]=parentKey;
+												recRelate[conf.relateparentfield]=parentKey;
 											}else{
 												this.record[conf.linkchildfield]=parentKey;
 											}
@@ -377,7 +377,7 @@ export class NWin {
 											data[key]=this.record[key];
 										if(conf.beforechange){
 											if(conf.onchange)NUT.runComponent(conf.onchange,{action:item.id,data:data,config:conf});
-										}else NUT.ds.insert({url:conf.tableid_edit,data:data,returnid:true},function(res){
+										}else NUT.ds.insert({url:conf.table.urledit,data:data,returnid:true},function(res){
 											if(res.success){
 												NUT.notify("ℹ️ Record inserted.","lime");
 												var newid=res.result[0];
@@ -386,7 +386,7 @@ export class NWin {
 												//grid.select(newid);
 												if(recRelate){
 													recRelate[conf.relatechildfiled]=data[conf.linkchildfield];
-													NUT.ds.insert({url:conf.relatetableid_edit,data:recRelate},function(res2){
+													NUT.ds.insert({url:conf.relatetable.urledit,data:recRelate},function(res2){
 														if (res2.success)
 															NUT.notify("ℹ️ Record inserted.","lime");
 														else

@@ -395,8 +395,8 @@ function menu_onClick(evt) {
 						for (var key in conf.needCache) {
 							if (conf.needCache.hasOwnProperty(key) && !NUT.domains[key]) needCaches.push(conf.needCache[key]);
 						}
-						//win.cacheDomainAndOpenWindow(a.div, conf, needCaches, 0);
-						win.buildWindow(a.div, conf, 0);
+						win.cacheDomainAndOpenWindow(a.div, conf, needCaches, 0);
+						//win.buildWindow(a.div, conf, 0);
 						a.innerHTML = appName || conf.windowname;
 					} else NUT.notify("⚠️ No cache for window " + tag, "yellow");
 				} else NUT.notify("⛔ ERROR: " + res.result, "red");
