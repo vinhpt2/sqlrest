@@ -1,5 +1,4 @@
 <h1><b>#️⃣SQLRest</b> API & <b>🌰NUT</b> - <i>Nocode Universal Tools</i></h1>
-<h2>EVERYBODY CAN PROGRAM</h2>
 <p>
 <b>#️⃣SQLRest</b> is a complete set of REST API base on Sql Management Object (SMO) designed to allow for easy and simple programmatic management all aspects of Microsoft SQL Server. 
 <ul><b>The <i>SQLRest</i> API includes:</b>
@@ -23,3 +22,4 @@
   <li><i>nMobile</i>: Smart responsive web app with optimized interface for mobile users.</li>
 </ul>
 </p>
+<h2>EVERYBODY CAN PROGRAM</h2>
