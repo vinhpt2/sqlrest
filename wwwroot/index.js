@@ -145,7 +145,8 @@ function openDesktop() {
 						data.appname = NUT.translate(data.translate) || data.appname;
 						data.description = NUT.translate(data.description);
 						NUT.apps[id] = data;
-						if (data.issystem) {
+						var issystem = !n$.user.issystem && data.issystem;
+						if (issystem) {
 							toolHtml += "<div class='nut-tool' onclick='openApp(" + id + ")' title='" + data.appname + "'><img src='site/" + data.siteid + "/" + id + "/icon.png'/></div>";
 						} else {
 							appHtml += "<div title='" + data.description + "' class='nut-tile' style='background:" + data.color + "' onclick='openApp(" + id + ")'><br/><img src='site/" + data.siteid + "/" + id + "/icon.png'/><br/>" + data.appname + "</div>";
@@ -240,25 +241,49 @@ window.openApp = function (id) {
 		NUT.ds.select({ url: NUT.URL + "nv_appservice_service", where: where }, function (res) {
 			if (res.success) {
 				NUT.services = {};
+				var domain = { items: [], lookup: {}, lookdown: {} };
 				for (var i = 0; i < res.result.length; i++) {
 					var service = res.result[i];
 					NUT.services[service.serviceid] = service;
+
+					var item = { id: service.serviceid, text: service.servicename };
+					domain.items.push(item);
+					domain.lookup[item.id] = item.text;
+					domain.lookdown[item.text] = item.id;
 				}
+				NUT.domains["n_service"] = domain;
 				//cache table
 				NUT.ds.select({ url: NUT.URL + "nv_appservice_table", where: where }, function (res2) {
 					if (res2.success) {
 						NUT.tables = {};
-						var tableIds = [];
+						var relateTableIds = [];
+						var domain = { items: [], lookup: {}, lookdown: {} };
 						for (var i = 0; i < res2.result.length; i++) {
 							var table = res2.result[i];
 							var url = NUT.services[table.serviceid].url + "data/";
 							table.urlview = url + (table.viewname || table.tablename);
 							table.urledit = url + table.tablename;
 							NUT.tables[table.tableid] = table;
-							if(table.tabletype == "relate")tableIds.push(table.tableid);
+							if (table.tabletype == "relate") relateTableIds.push(table.tableid);
+
+							var item = { id: table.tableid, text: table.tablename };
+							domain.items.push(item);
+							domain.lookup[item.id] = item.text;
+							domain.lookdown[item.text] = item.id;
 						}
+						NUT.domains["n_table"] = domain;
+						//assign columnkey, columndisplay...
+						NUT.ds.select({ url: NUT.URL + "n_column", where: [["columntype", "!is", null], ["tableid", "in", Object.keys(NUT.tables)]] }, function (res3) {
+							if (res3.success) {
+								for (var i = 0; i < res3.result.length; i++) {
+									var col = res3.result[i];
+									var table = NUT.tables[col.tableid];
+									table["column" + col.columntype] = col.columnname;
+								}
+							} else NUT.notify("⛔ ERROR: " + res3.result, "red");
+						});
 						//cache relate
-						if (tableIds.length) NUT.ds.select({ url: NUT.URL + "n_column", where: [["linktableid", "!is", null], ["tableid", "in", tableIds]] }, function (res3) {
+						if (relateTableIds.length) NUT.ds.select({ url: NUT.URL + "n_column", where: [["linktableid", "!is", null], ["tableid", "in", relateTableIds]] }, function (res3) {
 							if (res3.success) {
 								NUT.relates = {};
 								var lookupColumn = {};
@@ -391,12 +416,14 @@ function menu_onClick(evt) {
 						conf.tabid = conf.windowid;
 						conf.windowname = NUT.translate(conf.translate) || conf.windowname;
 						NUT.windows[tag] = conf;
-						var needCaches = [];
-						for (var key in conf.needCache) {
-							if (conf.needCache.hasOwnProperty(key) && !NUT.domains[key]) needCaches.push(conf.needCache[key]);
+						if (NUT.isObjectEmpty(conf.needCache)) win.buildWindow(a.div, conf, 0);
+						else {
+							var needCaches = [];
+							for (var key in conf.needCache) {
+								if (conf.needCache.hasOwnProperty(key) && !NUT.domains[key]) needCaches.push(conf.needCache[key]);
+							}
+							win.cacheDomainAndOpenWindow(a.div, conf, needCaches, 0);
 						}
-						win.cacheDomainAndOpenWindow(a.div, conf, needCaches, 0);
-						//win.buildWindow(a.div, conf, 0);
 						a.innerHTML = appName || conf.windowname;
 					} else NUT.notify("⚠️ No cache for window " + tag, "yellow");
 				} else NUT.notify("⛔ ERROR: " + res.result, "red");

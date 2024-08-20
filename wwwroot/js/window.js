@@ -38,13 +38,15 @@ export class NWin {
 	cacheDomainAndOpenWindow(div, conf, needCaches, index) {
 		var fldconf = needCaches[index];
 		var self = this;
-		if (fldconf) NUT.ds.select({ url: fldconf.linktable.urlview, select: [fldconf.bindfieldname||fldconf.linktable.columnkey, fldconf.linktable.columndisplay], where: (fldconf.whereclause ? JSON.parse(fldconf.whereclause):null) }, function (res) {
+		var columnkey = fldconf.bindfieldname || fldconf.linktable.columnkey;
+		var columndisplay = fldconf.linktable.columndisplay || columnkey;
+		if (fldconf) NUT.ds.select({ url: fldconf.linktable.urlview, select: [columnkey, columndisplay], where: (fldconf.whereclause ? JSON.parse(fldconf.whereclause):null) }, function (res) {
 			if (res.success) {
 				var domain = { items: [], lookup: {}, lookdown: {} };
 				
 				for (var i = 0; i < res.result.length; i++) {
 					var data = res.result[i];
-					var item = { id: data[fldconf.bindfieldname || fldconf.linktable.columnkey], text: data[fldconf.linktable.columndisplay] };
+					var item = { id: data[columnkey], text: data[columndisplay] };
 					domain.items.push(item);
 					domain.lookup[item.id] = item.text;
 					domain.lookdown[item.text] = item.id;
@@ -292,8 +294,10 @@ export class NWin {
 			case "PREV":
 			case "NEXT":
 				var index=grid.getSelection(true)[0]+item.tag;
-				if(grid.records[index])
+				if (grid.records[index]) {
+					grid.selectNone(true);
 					grid.select(grid.records[index][grid.recid]);
+				}
 				break;
 			case "FIND":
 				//grid.searchOpen(evt.originalEvent.target);
@@ -439,7 +443,7 @@ export class NWin {
 							hasChanged=true;
 						}
 					}
-					if (hasChanged) tab.isForm ? form.mergeChanges() : grid.mergeChanges();
+					if (hasChanged&&!tab.isForm)grid.mergeChanges();
 					else NUT.notify("⚠️ No change!","yellow");
 				}
 				break;
@@ -687,10 +691,11 @@ export class NWin {
 		var total = evt.detail.data.total;
 		evt.detail.data.status = evt.detail.data.success ? "success" : "error";
 		evt.detail.data.records = records;
+		var select = this.getSelection().length;
 		evt.onComplete = function () {			
 			if (total) {
 				this.noZoomTo = true;
-				this.select(records[0][this.recid]);
+				if(select==0)this.select(records[0][this.recid]);
 			}
 			NWin.switchFormGrid(tab,total==1);
 			document.getElementById("rec_" + tab.id).innerHTML = total?1:0;
@@ -794,25 +799,29 @@ export class NWin {
 						column.editable.items = domain.items;
 						grid.refresh();
 					}
-				} else NUT.ds.select({ url: fldconf.linktable.urlview, select: [fldconf.bindfieldname || fldconf.linktable.columnkey, fldconf.linktable.columndisplay], where: [fldconf.wherefieldname,"=", value] }, function (res) {
-					if (res.success) {
-						domain = { items: [], lookup: {} };
-						for (var i = 0; i < res.result.length; i++) {
-							var data = res.result[i];
-							var item = { id: data[fldconf.bindfieldname || fldconf.linktable.columnkey], text: data[fldconf.columndisplay] };
-							domain.items.push(item);
-							domain.lookup[item.id] = item.text;
-							domain.lookdown[item.text] = item.id;
-						}
-						NUT.domains[key] = domain;
-						field.options.items = domain.items;
-						form.refresh();
-						if (column.editable) {
-							column.editable.items = domain.items;
-							grid.refresh();
-						}
-					} else NUT.notify("⛔ ERROR: " + res.result, "red");
-				});
+				} else {
+					var columnkey = fldconf.bindfieldname || fldconf.linktable.columnkey;
+					var columndisplay = fldconf.linktable.columndisplay || columnkey;
+					NUT.ds.select({ url: fldconf.linktable.urlview, select: [columnkey, columndisplay], where: [fldconf.wherefieldname, "=", value] }, function (res) {
+						if (res.success) {
+							domain = { items: [], lookup: {} };
+							for (var i = 0; i < res.result.length; i++) {
+								var data = res.result[i];
+								var item = { id: data[columnkey], text: data[columndisplay] };
+								domain.items.push(item);
+								domain.lookup[item.id] = item.text;
+								domain.lookdown[item.text] = item.id;
+							}
+							NUT.domains[key] = domain;
+							field.options.items = domain.items;
+							form.refresh();
+							if (column.editable) {
+								column.editable.items = domain.items;
+								grid.refresh();
+							}
+						} else NUT.notify("⛔ ERROR: " + res.result, "red");
+					});
+				}
 			}
 			if(fldconf.calculation){
 				var _v=[];
