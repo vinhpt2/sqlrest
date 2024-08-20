@@ -13,15 +13,13 @@
 </ul>
 </p>
 <p>
-<b>🌰NUT</b> is a nocode platform, helps you to build business management applications without coding. It is the easiest way to create apps for your management works.
-With <b>NUT</b>, all app's components (like menu, window, workflow, report...) are  pre-built like Lego bricks and pieces. You just choose, drag-drop and config them to build apps.
-You do not worry about complexity and variety of software technique and technology. You also are not afraid of the security threats and fast scale grown when develop an app. <b>NUT</b> takes all into account and solves these smoothly.
-<ul><b>The <i>SQLRest</i> API includes:</b>
+<b>🌰NUT</b> is a nocode platform, helps you to build business management applications without coding. It is the easiest way to create apps for your management works. With <b>NUT</b>, all app's components (like menu, window, workflow, report...) are  pre-built like Lego bricks and pieces. You just choose, drag-drop and config them to build apps.
+<ul><b>The <i>NUT</i> Tool includes:</b>
   <li><i>nForm</i>: Configurable  tool that creates from simple to complex app's input UI windows directly from customer's datasheet by select drag-drop corresponding tables and columns to the window layout.</li>
   <li><i>nWorkflow</i>: Drawing tool that help you define customer's business by draw all steps of process in an intuitive and user-friendly way.</li>
   <li><i>nCloudData</i>: The studio that user can define (table, column, view, sp...) and store their-own data sheet on the cloud. zCloudData also provides standard API allows other apps to read and write data via web.</li>
   <li><i>nReport</i>: Design report tool like word processing software but on web. User can create report for their own with visual interface and then easily share the results to other.</li>
-  <li><i>nMap</i>: Map view functions for any app need location information. Map editor functions for nay app need collecting and manage spatial data.</li>
-  <li><i>nMobile</i>: Full function as web app with an optimized interface for mobile users. Easy download and install from AppStore (iOS) or PlayStore (Android).</li>
+  <li><i>nMap</i>: Map view functions for any app need location information. Map editor functions for app need collecting and manage spatial data.</li>
+  <li><i>nMobile</i>: Smart responsive web app with optimized interface for mobile users.</li>
 </ul>
 </p>
