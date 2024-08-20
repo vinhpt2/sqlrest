@@ -23,3 +23,5 @@
 </ul>
 </p>
 <h2>EVERYBODY CAN PROGRAM</h2>
+<a href="https://nut.applicationjs.com">D E M O</a> (admin.demo/12345678) <br/>
+Website: <a href="https://applicationjs.com">applicationjs.com</a>
