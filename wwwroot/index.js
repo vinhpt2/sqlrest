@@ -1,4 +1,4 @@
-import { w2ui, w2layout, w2toolbar, w2form, w2utils, w2confirm, w2alert, w2popup, w2sidebar, w2tabs } from "../lib/w2ui.es6.min.js";
+import { w2ui, w2layout, w2toolbar, w2form, w2utils, w2confirm, w2alert, w2popup, w2sidebar, w2tabs, w2tooltip } from "../lib/w2ui.es6.min.js";
 import { NWin } from "../js/window.js";
 import { SqlREST } from "../js/sqlrest.js";
 
@@ -93,33 +93,35 @@ function login(user, pass, save) {
 					{ type: 'button', id: "notify", icon: "nut-i-notification", tooltip: "_Notify" },
 					{ type: 'button', id: "job", icon: "nut-i-information", tooltip: "_Job" },
 					{ type: 'break' },
-					{
-						type: 'menu', id: 'user', text: n$.user.username, items: [
+					{type: 'menu', id: 'user', text: n$.user.username, items: [
 							{ id: 'profile', text: '_Profile' },
 							{ id: 'changepass', text: '_Change password' },
 							{ text: '--' },
-							{ id: 'logout', text: '_Logout' }]
-					},
+							{ id: 'logout', text: '_Logout' }]},
 					{ type: 'break' },
-					{ type: 'button', id: "app", icon: "nut-i-switcher", tooltip: "_Applications" }
+					{ type: 'button', id: "app", icon: "nut-i-switcher" }
 				],
 				onClick(evt) {
-					if (evt.target == "user:profile") {
-						w2alert("<table><tr><td><b><i>Tài khoản:</i></b></td><td colspan='3'>" + n$.user.username + "</td></tr><tr><td><b><i>Họ tên:</i></b></td><td colspan='3'>" + n$.user.fullname + "</td></tr><tr><td><b><i>Điện thoại:</i></b></td><td>" + n$.user.phone + "</td><td><b><i>Nhóm:</i></b></td><td>" + n$.user.groupid + "</td></tr><tr><td><b><i>Trạng thái:</i></b></td><td>" + n$.user.status + "</td><td><b><i>Ghi chú:</i></b></td><td>" + n$.user.description + "</td></tr></table>", "<b>ℹ️ Information #<i>" + n$.user.userid + "</i></b>");
-					}
-					else if (evt.target == "user:changepass") {
-						w2popup.open({
-							title: "🔑 <i>Change password</i>",
-							speed: 0,
-							width: 400,
-							height: 210,
-							body: "<table style='margin:auto'><tr><td>*Old password:</b></td><td><input id='txtUser_PasswordOld' type='password'/></td></tr><tr><td>*New password:</b></td><td><input id='txtUser_PasswordNew' type='password'/></td></tr><tr><td>*Re-type password:</b></td><td><input id='txtUser_PasswordNew2' type='password'/></td></tr></table>",
-							buttons: '<button class="w2ui-btn" onclick="w2popup.close()">⛌ Close</button><button class="w2ui-btn" onclick="userChangePassword()">✔️ Ok</button>'
-						});
-					}
-					else if (evt.target == "user:logout") {
-						w2ui.layMain.hide("left");
-						location.reload();
+					switch (evt.target) {
+						case "user:profile":
+							w2alert("<table><tr><td><b><i>Tài khoản:</i></b></td><td colspan='3'>" + n$.user.username + "</td></tr><tr><td><b><i>Họ tên:</i></b></td><td colspan='3'>" + n$.user.fullname + "</td></tr><tr><td><b><i>Điện thoại:</i></b></td><td>" + n$.user.phone + "</td><td><b><i>Nhóm:</i></b></td><td>" + n$.user.groupid + "</td></tr><tr><td><b><i>Trạng thái:</i></b></td><td>" + n$.user.status + "</td><td><b><i>Ghi chú:</i></b></td><td>" + n$.user.description + "</td></tr></table>", "<b>ℹ️ Information #<i>" + n$.user.userid + "</i></b>");
+							break;
+						case "user:changepass":
+							w2popup.open({
+								title: "🔑 <i>Change password</i>",
+								speed: 0,
+								width: 400,
+								height: 210,
+								body: "<table style='margin:auto'><tr><td>*Old password:</b></td><td><input class='w2ui-input' id='txtUser_PasswordOld' type='password'/></td></tr><tr><td>*New password:</b></td><td><input class='w2ui-input' id='txtUser_PasswordNew' type='password'/></td></tr><tr><td>*Re-type password:</b></td><td><input class='w2ui-input' id='txtUser_PasswordNew2' type='password'/></td></tr></table>",
+								buttons: '<button class="w2ui-btn" onclick="w2popup.close()">⛌ Close</button><button class="w2ui-btn" onclick="userChangePassword()">✔️ Ok</button>'
+							});
+							break;
+						case "user:logout":
+							w2ui.layMain.hide("left"); location.reload();
+							break;
+						case "app":
+							w2tooltip.show({ name: "mnuShortcut", html: NUT.shortcut, anchor: evt.detail.originalEvent.target, hideOn: ['doc-click'] })
+							break;
 					}
 				}
 			})).render(divTop);
@@ -146,17 +148,16 @@ function openDesktop() {
 						data.description = NUT.translate(data.description);
 						NUT.apps[id] = data;
 						var issystem = !n$.user.issystem && data.issystem;
-						if (issystem) {
+						if (issystem)
 							toolHtml += "<div class='nut-tool' onclick='openApp(" + id + ")' title='" + data.appname + "'><img src='site/" + data.siteid + "/" + id + "/icon.png'/></div>";
-						} else {
+						else
 							appHtml += "<div title='" + data.description + "' class='nut-tile' style='background:" + data.color + "' onclick='openApp(" + id + ")'><br/><img src='site/" + data.siteid + "/" + id + "/icon.png'/><br/>" + data.appname + "</div>";
-						}
 					}
 				}
 			};
 			divApp.innerHTML = appHtml + "</center>";
 			divTool.innerHTML = toolHtml + "</center>";
-
+			NUT.shortcut = "<div style='transform: scale(0.8)'>"+divTool.innerHTML +"<hr/>"+ divApp.innerHTML+"</div>";
 			//if (res.length == 1) openApplication(id);
 		} else NUT.notify("⛔ ERROR: " + res.result, "red");
 	});
@@ -177,14 +178,13 @@ function userChangePassword() {
 }
 
 window.openApp = function (id) {
+	w2tooltip.hide("mnuShortcut");
 	//load menu
 	n$.app = NUT.apps[id];
-
 	if (n$.app.apptype == "engine") {
 		window.open(n$.app.link + "?username=" + n$.user.username + "&siteid=" + n$.user.siteid);
 		labCurrentApp.innerHTML = "";
 	} else {
-		tb_tbrTop_item_divSpace.innerHTML = divTool.innerHTML;
 		var isGis = (n$.app.apptype == "gis");
 		divMain.innerHTML = '<div id="divTitle" style="padding:6px"><img width="64" height="64" src="site/' + n$.app.siteid + '/' + id + '/icon.png"/><br/><h2><b style="color:brown">' + n$.app.appname + '</b></h2><br/><hr/><br/><h3>' + n$.app.description + '</h3></div>';
 		divMain.style.backgroundImage = "";
@@ -335,7 +335,7 @@ window.openApp = function (id) {
 								var app = NUT.apps[key];
 								if (app.siteid == n$.user.siteid) childs.push({ id: "app_" + app.appid, text: app.appname, tag: (app.apptype == "engine" ? 5 : 3), where: ["appid", "=", app.appid] });
 							}
-							nodes.push({ id: "app_", text: "_Applications", group: true, expanded: true, nodes: childs });
+							nodes.push({ id: "app_", text: "_Application", group: true, expanded: true, nodes: childs });
 						}
 
 						(w2ui["mnuMain"] || new w2sidebar({

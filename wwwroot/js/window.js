@@ -70,7 +70,6 @@ export class NWin {
 		//w2ui["form_"+id].resize();
 	}
 	buildContent(div, tab) {
-		
 		var conf=tab.tag;
 		conf.default={};
 		var group=null,colGroup=null;
@@ -870,7 +869,7 @@ export class NWin {
 		if(!this.columns[evt.detail.column].editable)NWin.switchFormGrid(this.tab);
 	}
 	static switchFormGrid(tab, showForm) {
-		tab.isForm = (showForm === undefined?!tab.isForm:showForm);
+		tab.isForm = (showForm?true:!tab.isForm);
 		var form=w2ui["form_"+tab.id];
 		var grid=w2ui["grid_"+tab.id];
 		form.box.style.display = tab.isForm ?"":"none";
