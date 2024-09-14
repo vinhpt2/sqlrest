@@ -70,7 +70,8 @@ namespace SQLRestC.Controllers
                                 dataUsage = obj.DataSpaceUsed,
                                 indexUsage = obj.IndexSpaceUsed,
                                 columns = (detail ? Global.getColumnInfo(obj.Columns) : null),
-                                path = obj.ExtendedProperties.Contains(Global.MS_PATH) ? (String)obj.ExtendedProperties[Global.MS_PATH].Value : null
+                                path = obj.ExtendedProperties.Contains(Global.MS_PATH) ? (String)obj.ExtendedProperties[Global.MS_PATH].Value : null,
+                                alias = obj.ExtendedProperties.Contains(Global.MS_ALIAS) ? (String)obj.ExtendedProperties[Global.MS_ALIAS].Value : null
                             };
                         }
                         else response.result = "Table '" + database + "."+schema + "." + name + "' not found!";

@@ -9,20 +9,55 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO.Compression;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace SQLRestC
 {
+    public class Org
+    {
+        public String id { get; set; }
+        public String text { get; set; }
+        public String parentid { get; set; }
+    }
+    public class Role
+    {
+        public String id { get; set; }
+        public String text { get; set; }
+    }
+    public class Access
+    {
+        public bool noselect { get; set; }
+        public bool noinsert { get; set; }
+        public bool noupdate { get; set; }
+        public bool nodelete { get; set; }
+        public bool noexport { get; set; }
+        public bool islock { get; set; }
+        public bool isarchive { get; set; }
+    }
+    public class User
+    {
+        public String userid;
+        public String roleid;
+        public String siteid;
+        public String columnorg;
+        public String orgwhere;
+        public Dictionary<String, Role> roles;
+        public Dictionary<String, Org> orgs;
+        public Dictionary<String, Access> access;
+    }
     public static class Global {
         public static String server;
+        public static String database;
         public static String username;
         public static String password;
         public static String jwtkey;
+        public static Dictionary<String, User> profiles=new Dictionary<String, User>();
         public const String ROOT = "rest/";
-        public const String MS_PATH = "MS_Path";
-        public const String MS_DESCRIPTION = "MS_Description";
+        public const String MS_PATH = "MS_PATH";
+        public const String MS_ALIAS = "MS_ALIAS";
         public const int LIMIT = 200;
 
         public static DatabaseJson[] getDatabaseInfo(Server sv,bool detail = false, bool system=false)
@@ -101,7 +136,7 @@ namespace SQLRestC
                         id = (int)row["object_id"],
                         name = (String)row["name"]
                     };
-                    if (detail) rs[i].columns = Global.getColumnInfo(db.Tables[rs[i].name, schema].Columns);
+                    if (detail) rs[i].columns = Global.getColumnInfo(db.Views[rs[i].name, schema].Columns);
                 }
                 return rs;
             }
@@ -123,7 +158,7 @@ namespace SQLRestC
                     inPrimaryKey = obj.InPrimaryKey,
                     identity = obj.Identity,
                     defaultValue = obj.Default,
-                    description = obj.ExtendedProperties.Contains(Global.MS_DESCRIPTION) ? (String)obj.ExtendedProperties[Global.MS_DESCRIPTION].Value : null
+                    alias = obj.ExtendedProperties.Contains(Global.MS_ALIAS) ? (String)obj.ExtendedProperties[Global.MS_ALIAS].Value : null
                 };
             }
             return rs;
@@ -159,9 +194,9 @@ namespace SQLRestC
                 }
                 else tb.Indexes.Remove("PK_" + tb.Name);
             }
-            if (col.description != null)
+            if (col.alias != null)
             {
-                column.ExtendedProperties.Add(new ExtendedProperty(column, Global.MS_DESCRIPTION, col.description));
+                column.ExtendedProperties.Add(new ExtendedProperty(column, Global.MS_ALIAS, col.alias));
             }
             return column;
         }
@@ -324,6 +359,7 @@ namespace SQLRestC
     {
         public int id { get; set; }
         public String name { get; set; }
+        public String alias { get; set; }
         public double dataUsage { get; set; }
         public double indexUsage { get; set; }
         public String path { get; set; }
@@ -334,6 +370,7 @@ namespace SQLRestC
     {
         public int id { get; set; }
         public String name { get; set; }
+        public String alias { get; set; }
         public String path { get; set; }
         public ColumnJson[] columns { get; set; }
     }
@@ -342,6 +379,7 @@ namespace SQLRestC
     {
         public int id { get; set; }
         public String name { get; set; }
+        public String alias { get; set; }
         public String dataType { get; set; }
         public int length { get; set; }
         public int precision { get; set; }
@@ -349,6 +387,5 @@ namespace SQLRestC
         public bool inPrimaryKey { get; set; }
         public bool identity { get; set; }
         public String defaultValue { get; set; }
-        public String description { get; set; }
     }
 }

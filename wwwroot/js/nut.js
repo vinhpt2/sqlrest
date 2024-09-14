@@ -4,7 +4,7 @@
 	extent: null,
 	layer: null,
 	app: null,
-	lang:null,
+	locale:null,
 	workflow: null,
 	now: function () {
 		return (new Date()).toISOString().substr(0, 10);
@@ -20,10 +20,12 @@
 	}
 }
 var NUT = {
-	URL: "https://localhost:7006/rest/nut2/dbo/data/",
-	URL_TOKEN: "https://localhost:7006/rest/token/nut2",
+	URL: "https://localhost:7006/rest/nut/dbo/data/",
+	URL_DB: "https://localhost:7006/rest/nut/dbo/",
+	URL_TOKEN: "https://localhost:7006/rest/token/nut",
 	shortcut:null,
 	ds: null,
+	access:null,
 	apps: {},
 	windows: {},
 	domains: {},
@@ -37,22 +39,32 @@ var NUT = {
 		field: ["fieldid", "fieldname", "translate", "isdisplaygrid", "isdisplayform", "issearch", "displaylength", "seqno", "isreadonly", "fieldlength", "vformat", "defaultvalue", "isrequire", "isfrozen", "fieldgroup", "tabid", "columnid", "fieldtype", "linktableid", "domainid", "issearchtonghop", "parentfieldid", "wherefieldname", "placeholder", "calculation", "colspan", "rowspan", "geocolumn", "linkwindowid","columnname","tableid","whereclause","bindfieldname","options","columntype"],
 		menu:["menuid","menuname","parentid","seqno","translate","issummary","appid","windowid","siteid","tabid","menutype","execname","icon"]
 	},
-	I_USER:"_USER",
-	I_PASS: "_PASS",
-	I_LANG: "_LANG",
 	LAYOUT_COLS : 3,
 	GRID_LIMIT : 100,
-	z: function (config) {// tag, attribute, childrens
-		var ele = (config[0] ? document.createElement(config[0]) : this);
-		if (config[1]) for (var key in config[1]) ele[key] = config[1][key];
-		var children = config[2];
+	z: function (param) {// tag, attribute, childrens
+		var elm = (param[0]?document.createElement(param[0]) : this);
+		if (param[1]) for (var key in param[1]) elm[key] = param[1][key];
+		var children = param[2];
 		if (Array.isArray(children)) {
-			for (var i = 0; i < children.length; i++)ele.z(children[i]);
+			for (var i = 0; i < children.length; i++)elm.z(children[i]);
 		}
 		if (this instanceof HTMLElement) {
-			if (config[0]) this.appendChild(ele);
+			if (param[0]) this.appendChild(elm);
 		}
-		return ele;
+		return elm;
+	},
+	cookie: function (ck) {
+		if (ck) {
+			localStorage.setItem("user", ck.username);
+			localStorage.setItem("site", ck.sitecode);
+			localStorage.setItem("pass", ck.savepass ? ck.password:"");
+			localStorage.setItem("save", ck.savepass?"1":"");
+		} else return {
+			username: localStorage.getItem("user"),
+			sitecode: localStorage.getItem("site"),
+			password: localStorage.getItem("pass"),
+			savepass: localStorage.getItem("save"),
+		}
 	},
 	configDomain: function (caches){
 		var domain={};
@@ -140,10 +152,10 @@ var NUT = {
 					var tab = lookupTab[field.tabid];
 					tab.fields.push(field);
 					lookupField[field.fieldid]=field;
-					lookupFieldName[tab.tablename + "." + field.columnname] = field;
+					lookupFieldName[tab.table.tablename + "." + field.columnname] = field;
 					
 					if (field.linktableid) {
-						winconf.needCache[field.linktableid] = field;
+						winconf.needCache[field.linktableid + field.whereclause] = field;
 						//1-n relationship
 						if (!tab.linktableid && tab.parenttabid) {
 							var parentTab = lookupTab[tab.parenttabid];
@@ -222,7 +234,7 @@ var NUT = {
 		if (n$.windowid) {
 			for (var i = 0; i < divTitle.childNodes.length; i++) {
 				var node = divTitle.childNodes[i].firstChild;
-				node.style.color = "gray";
+				node.style.color = "grey";
 				if (id == node.tag) {
 					if (appName) node.innerHTML = appName;
 					node.onclick();
@@ -235,52 +247,44 @@ var NUT = {
 		for (var i = 1; i < divWindow.childNodes.length; i++)
 			divWindow.childNodes[i].style.display = "none";
 
-		var div = document.createElement("div");
-		div.className = "nut-full";
-		divWindow.appendChild(div);
-
-		var span = document.createElement("span");
-		var a = document.createElement("i");
-		a.innerHTML = NUT.w2utils.lang('_Loading');
-		a.className = "nut-link";
-		a.div = div;
-		a.tag = id;
-		a.onclick = function () {
-			var children = this.div.parentNode.childNodes;
-			for (var i = 1; i < children.length; i++)
-				children[i].style.display = "none";
-			this.div.style.display = "";
-
-			children = this.parentNode.parentNode.childNodes;
-			for (var i = 0; i < children.length; i++)
-				children[i].firstChild.style.color = "gray";
-			this.style.color = "";
-
-			n$.windowid = this.tag;
-		};
-		span.appendChild(a);
-
-		var close = document.createElement("span");
-		close.className = "nut-close";
-		close.innerHTML = " ⛌   ";
-		close.tag = id;
-		close.onclick = function () {
-			var title = this.parentNode.parentNode;
-			this.previousElementSibling.div.remove();
-			this.parentNode.remove();
-			if (this.tag == n$.windowid) {
-				if (title.childNodes.length) title.childNodes[0].firstChild.onclick();
-				else n$.windowid = null;
+		var div = divWindow.z(["div", { className: "nut-full" }]);
+		var span = divTitle.z(["span"]);
+		var a = span.z(["i", {
+			innerHTML: NUT.w2utils.lang('_Loading'),
+			className: "nut-link",
+			div: div,
+			tag: id,
+			onclick: function () {
+				var children = this.div.parentNode.childNodes;
+				for (var i = 1; i < children.length; i++)
+					children[i].style.display = "none";
+				this.div.style.display = "";
+				children = this.parentNode.parentNode.childNodes;
+				for (var i = 0; i < children.length; i++)
+					var node = children[i].firstChild.style.color = "grey";
+				this.style.color = "";
+				n$.windowid = this.tag;
 			}
-		}
-		span.appendChild(close);
-
-		divTitle.appendChild(span);
+		}]);
+		span.z(["span", {
+			className: "nut-close",
+			innerHTML: " ⛌   ",
+			tag: id,
+			onclick: function () {
+				var title = this.parentNode.parentNode;
+				this.previousElementSibling.div.remove();
+				this.parentNode.remove();
+				if (this.tag == n$.windowid) {
+					if (title.childNodes.length) title.childNodes[0].firstChild.onclick();
+					else n$.windowid = null;
+				}
+			}
+		}]);
 		return a;
 	},
 	translate: function (str) {
 		try {
-			return JSON.parse(str)[n$.lang];
+			return JSON.parse(str)[n$.locale];
 		} catch (ex) {
 			return str;
 		}
@@ -330,16 +334,10 @@ var NUT = {
 	},
 	runComponent(com, data) {
 		//data:records,parent,config,gsmap
-
 		if (window[com]) {
 			window[com].run(data);
 		} else {//load component
-			var script = document.createElement("script");
-			script.src = "site/" + n$.app.siteid + "/" + n$.app.appid +"/" + com + ".js";
-			document.head.appendChild(script);
-			script.onload = function () {
-				window[com].run(data);
-			}
+			document.head.z(["script", { src: "site/" + n$.app.siteid + "/" + n$.app.appid + "/" + com + ".js", onload: function () { window[com].run(data) } }]);
 		}
 	}
 }

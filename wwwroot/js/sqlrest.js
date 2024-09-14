@@ -1,4 +1,4 @@
-export class SqlREST{
+﻿export class SqlREST{
 	static token = null;
 	static OPERATOR = {
 		"is":" is ",
@@ -53,22 +53,6 @@ export class SqlREST{
 		if (p.select) decode += "&select=" + p.select;
 		if (p.orderby) decode += "&orderby=" + p.orderby;
 		return decode;
-	}
-
-	static login(p, onok) {
-		var xhr = new XMLHttpRequest();
-		xhr.onreadystatechange = function () {
-			if (this.readyState == XMLHttpRequest.DONE) {
-				if (this.status == 0 || (this.status >= 200 && this.status < 400))
-					onok(JSON.parse(this.response));
-				else
-					this.onerror(this.response);
-			}
-		};
-		xhr.onerror = this.onerror;
-		xhr.open("POST", p.url, true);
-		xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-		xhr.send(JSON.stringify(p.data));
 	}
 
 	static select(p,onok){
@@ -188,7 +172,7 @@ export class SqlREST{
 				if(this.status==0||(this.status>=200&&this.status<400))
 					onok(JSON.parse(this.response));
 				else
-					this.onerror(this.response);
+					this.onerror(this.status);
 			}
 		};
 		xhr.onerror=this.onerror;
@@ -199,6 +183,6 @@ export class SqlREST{
 	}
 
 	static onerror(err){
-		alert(err);
+		alert("⛔ ERROR: " + err);
 	}
 }

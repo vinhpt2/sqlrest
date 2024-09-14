@@ -10,6 +10,7 @@ namespace SQLRestC
         {
             var builder = WebApplication.CreateBuilder(args);
             Global.server = builder.Configuration["Connection:server"];
+            Global.database = builder.Configuration["Connection:database"];
             Global.username = builder.Configuration["Connection:username"];
             Global.password = builder.Configuration["Connection:password"];
             Global.jwtkey = builder.Configuration["Authentication:jwtkey"];

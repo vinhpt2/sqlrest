@@ -8,7 +8,7 @@ var SysCacheDomain={
 					lookup={};
 					for(var i=0;i<res.length;i++)lookup[res[i].tablename]=res[i];
 					self.showDlgCache(lookup);
-				} else w2alert("There is no cache domain table in service","ℹ️ Inform");
+				} else w2alert("There is no cache domain table in service","Inform");
 			});
 		}else NUT.tagMsg("No Data Service selected!","yellow");
 	},

@@ -421,7 +421,7 @@ var SysLayoutWindow={
 		}
 		
 		NUT.ds.update({url:NUT.URL+"syscache",where:["windowid","=",this.win.windowid],data:{layoutjson:JSON.stringify(layout)}},function(res){
-			NUT.alert("ℹ️ Layout's cache updated.");
+			NUT.alert("Layout's cache updated.");
 		});
 	},
 	cell_onClick:function(){

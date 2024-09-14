@@ -31,7 +31,13 @@ namespace SQLRestC.Controllers
                 {
                     var from = " from " + database + "." + schema + "." + table;
                     var sql = "select " + (select==null?"*":select) + from;
-                    if (where != null) sql += " where " + where;
+                    String whereClause=null;
+                    String siteid = null;
+                    if (database == Global.database) siteid = Global.profiles[this.User.Identity.Name].siteid;
+                    if (where != null && siteid != null)whereClause = " where siteid="+siteid+" and " + where;
+                    else if(where != null) whereClause = " where " + where;
+                    else if (siteid != null) whereClause = " where siteid=" + siteid;
+                    if (whereClause != null) sql += whereClause;
                     if (groupby != null) sql += " group by " + groupby;
                     if (having != null) sql += " having " + having;
                     sql += " order by " + (orderby == null ? 1 : orderby);
@@ -44,7 +50,7 @@ namespace SQLRestC.Controllers
                         if (limit != 0)
                         {
                             sql += ";select count(*)" + from;
-                            if (where != null) sql += " where " + where;
+                            if (whereClause != null) sql += whereClause;
                         }
                         using (var ds = db.ExecuteWithResults(sql))
                         {
@@ -166,10 +172,12 @@ namespace SQLRestC.Controllers
                         var values = rec.Values.ToArray();
                         for (int j = 0; j < values.Length; j++)
                         {
-                            if(values[j] != null){
+                            if (values[j] == null) values[j] = "null";
+                            else
+                            {
                                 var val = (JsonElement)values[j];
                                 if (val.ValueKind == JsonValueKind.String) values[j] = "N'" + val + "'";
-                                else if(val.ValueKind == JsonValueKind.True) values[j] = 1;
+                                else if (val.ValueKind == JsonValueKind.True) values[j] = 1;
                                 else if (val.ValueKind == JsonValueKind.False) values[j] = 0;
                             }
                         }

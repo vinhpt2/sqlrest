@@ -81,7 +81,7 @@ namespace SQLRestC.Controllers
                                 inPrimaryKey = obj.InPrimaryKey,
                                 identity = obj.Identity,
                                 defaultValue = obj.Default,
-                                description = obj.ExtendedProperties.Contains(Global.MS_DESCRIPTION) ? (String)obj.ExtendedProperties[Global.MS_DESCRIPTION].Value : null
+                                alias = obj.ExtendedProperties.Contains(Global.MS_ALIAS) ? (String)obj.ExtendedProperties[Global.MS_ALIAS].Value : null
                             };
                         }
                         else response.result = "Column '" + database + "." + schema + "." + table + "." + name + "' not found!";

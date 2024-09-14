@@ -69,7 +69,7 @@ var SysApplyWindowCache = {
 	updateWindowCache:function(){
 		NUT.ds.update({url:NUT.URL+"n_cache",where:["windowid","=",this.window.windowid],data:{configjson:zipson.stringify(this.cache)}},function(res){
 			if (res.success)
-				NUT.notify("ℹ️ Window's cache updated.","lime");
+				NUT.notify("Window's cache updated.","lime");
 			else
 				NUT.notify("⛔ ERROR: " + res.result, "red");
 		});

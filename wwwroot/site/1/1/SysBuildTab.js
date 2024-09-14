@@ -134,7 +134,7 @@ var SysBuildTab={
 							if (callback) callback(res[0]);
 							for (var i = 0; i < fields.length; i++)fields[i].tabid = res.result[0].tabid;
 							self.insertFields(fields);
-							NUT.notify("ℹ️ Record inserted.", "lime");
+							NUT.notify("Record inserted.", "lime");
 						} else NUT.notify("⛔ ERROR: " + res.result, "red");
 					});
 				}
@@ -143,7 +143,7 @@ var SysBuildTab={
 	},
 	insertFields:function(fields){
 		NUT.ds.insert({url:NUT.URL+"n_field",data:fields},function(res){
-			if (res.result) NUT.notify("ℹ️ Records inserted.", "lime");
+			if (res.result) NUT.notify("Records inserted.", "lime");
 			else NUT.notify("⛔ ERROR: " + res.result, "red");
 		});
 	}
