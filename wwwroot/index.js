@@ -78,9 +78,9 @@ function login(cookie) {
 			for (var key in res.result.orgs) if (res.result.orgs.hasOwnProperty(key)) {
 				orgs.push(res.result.orgs[key]);
 			}
-			if (roles.length == 1 && orgs.length == 1) {
+			if (roles.length == 1 && orgs.length <= 1) {
 				n$.user.roleid = roles[0].id;
-				n$.user.orgid = orgs[0].id;
+				n$.user.orgid = orgs[0] ? orgs[0].id:null;
 				openDesktop();
 			} else {
 				var fields = [{ field: 'roleid', type: 'select', html: { label: "_Role" }, options: { items: roles } }];

@@ -297,7 +297,8 @@ var NUT = {
 		return where;
 	},
 	isObjectEmpty: function (obj){
-		for(var key in obj)if(obj.hasOwnProperty(key))return false;
+		for (var key in obj)
+			if (obj.hasOwnProperty(key)) return false;
 		return true;
 	},
 	openDialog: function (content,title){

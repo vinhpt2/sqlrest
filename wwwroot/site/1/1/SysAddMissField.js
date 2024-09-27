@@ -1,55 +1,55 @@
 var SysAddMissField={
 	run:function(p){
 		if(p.records.length){
-			this.tab=p.records[0];
-			var self=this;
-			NUT.confirm('Add missing fields for tab '+this.tab.tabname+'?',function(evt){
+			var tab=p.records[0];
+			NUT.confirm('Add missing fields for tab '+tab.tabname+'?',function(evt){
 				if(evt=="yes"){
-					self.addMissField(self.tab);
+					SysAddMissField.addMissField(tab);
 				}
 			});
 		} else NUT.notify("⚠️ No Tab selected!","yellow");
 	},
 	
 	addMissField:function(tab){
-		var self=this;
 		NUT.ds.select({url:NUT.URL+"n_field",select:"columnid",where:["tabid","=",tab.tabid]},function(res){
 			if (res.success) {
-				var columnids = [];
+				var lookup = {};
 				for (var i = 0; i < res.result.length; i++)
-					columnids.push(res.result[i].columnid);
-				NUT.ds.select({ url: NUT.URL + "n_column", where: (columnids.length ? [["tableid", "=", tab.tableid], ["columnid", "!in", columnids]] : ["tableid", "=", tab.tableid]) }, function (res2) {
-					if (res2.success&&res2.result.length) {
+					lookup[res.result[i].columnid]=true;
+				NUT.ds.select({ url: NUT.URL + "n_column", where: ["tableid", "=", tab.tableid] }, function (res2) {
+					if (res2.success) {
 						var fields = [];
 						for (var i = 0; i < res2.result.length; i++) {
 							var col = res2.result[i];
-							var fld = {
-								tabid: tab.tabid,
-								fieldname: col.alias || col.columnname,
-								fieldtype: (col.domainid || col.linktableid ? "select" : col.datatype),
-								isdisplaygrid: true,
-								isdisplayform: (col.columntype != "key"),
-								issearch: true,
-								seqno: col.seqno,
-								fieldlength: col.length,
-								isrequire: col.isnotnull,
-								isreadonly: (col.columntype == "key"),
-								isfrozen: (col.columntype == "code"),
-								columnid: col.columnid,
-								siteid: n$.user.siteid
-							};
-							fields.push(fld);
+							if (!lookup[col.columnid]) {
+								var fld = {
+									tabid: tab.tabid,
+									fieldname: col.alias || col.columnname,
+									fieldtype: col.linktableid || col.domainid ? "select" : col.datatype,
+									defaultvalue: col.defaultvalue,
+									isdisplaygrid: true,
+									isdisplayform: (col.columntype != "key"),
+									issearch: true,
+									seqno: col.seqno,
+									fieldlength: col.length,
+									isrequire: col.isnotnull,
+									isreadonly: (col.columntype == "key"),
+									isfrozen: (col.columntype == "code"),
+									columnid: col.columnid,
+									siteid: n$.user.siteid
+								};
+								fields.push(fld);
+							}
 						}
-						self.insertFields(fields);
-					} else NUT.notify("⚠️ No missing field", "yellow");
+						if (fields.length) {
+							NUT.ds.insert({ url: NUT.URL + "n_field", data: fields }, function (res3) {
+								if (res3.success) NUT.notify(fields.length + " fields added.", "lime");
+								else NUT.notify("⛔ ERROR: " + res3.result, "red");
+							});
+						} else NUT.notify("⚠️ No missing field", "yellow");
+					} else NUT.notify("⛔ ERROR: " + res2.result, "red");
 				});
 			} else NUT.notify("⛔ ERROR: " + res.result, "red");
-		});
-	},
-	insertFields:function(fields){
-		NUT.ds.insert({url:NUT.URL+"n_field",data:fields},function(res){
-			if (res.success) NUT.notify(fields.length + " fields added.", "lime");
-			else NUT.notify("⛔ ERROR: " + res.result, "red");
 		});
 	}
 }

@@ -2,17 +2,16 @@ var SysBuildTab={
 	MAIN_TAB:"Main Tab",
 	run:function(p){
 		if(p.records.length){
-			this.window=p.records[0];
-			var self=this;
-			NUT.ds.select({url:NUT.URL+"nv_appservice_table",where:["appid","=",this.window.appid]},function(res){
+			var window=p.records[0];
+			NUT.ds.select({url:NUT.URL+"nv_appservice_table",where:["appid","=",window.appid]},function(res){
 				if (res.success) {
 					var tables = res.result;
-					if (tables.length)NUT.ds.select({ url: NUT.URL + "n_tab", where: ["windowid", "=", self.window.windowid] }, function (res2) {
+					if (tables.length)NUT.ds.select({ url: NUT.URL + "n_tab", where: ["windowid", "=", window.windowid] }, function (res2) {
 							if (res2.success) {
 								var existTabs = {};
 								var tabs = res2.result;
 								for (var i = 0; i < tabs.length; i++) existTabs[tabs[i].tabid] = tabs[i];
-								self.showDlgBuild(tables, existTabs);
+								SysBuildTab.showDlgBuild(tables, existTabs);
 							} else NUT.notify("⛔ ERROR: " + res2.result, "red");
 						});
 					else NUT.notify("⚠️ No table in any data service!", "yellow");
@@ -44,7 +43,7 @@ var SysBuildTab={
 		}
 		fields[0].options={items:items};
 		var id="div_SysBuildTab";
-		var self=this;
+
 		NUT.w2popup.open({
 			title: '⛏️ Build tabs',
 			modal:true,
@@ -59,7 +58,7 @@ var SysBuildTab={
 						fields: fields,
 						record:lookup,
 						onChange:function(evt){
-							if(evt.target==self.MAIN_TAB){
+							if (evt.target == SysBuildTab.MAIN_TAB){
 								var chk=document.getElementById(evt.value_new);
 								chk.checked=chk.disabled=true;
 								if(evt.value_previous){
@@ -76,13 +75,13 @@ var SysBuildTab={
 							"✔️ Build":function(){
 								if(this.validate(true).length==0){
 									var change=this.getChanges();
-									if(isBlank)self.insertTab(lookupTable[this.record[self.MAIN_TAB]],0,null,function(mainTab){
+									if (isBlank) SysBuildTab.insertTab(lookupTable[this.record[SysBuildTab.MAIN_TAB]],0,null,function(mainTab){
 										for(key in change)if(change.hasOwnProperty(key)){
-											if(key!=self.MAIN_TAB&&change[key])self.insertTab(lookupTable[key],++count,mainTab);
+											if (key != SysBuildTab.MAIN_TAB && change[key]) SysBuildTab.insertTab(lookupTable[key],++count,mainTab);
 										}
 									});else{
 										for(key in change)if(change.hasOwnProperty(key)){
-											if(key!=self.MAIN_TAB&&change[key])self.insertTab(lookupTable[key],++count,existTabs[this.record[self.MAIN_TAB]]);
+											if (key != SysBuildTab.MAIN_TAB && change[key]) SysBuildTab.insertTab(lookupTable[key], ++count, existTabs[this.record[SysBuildTab.MAIN_TAB]]);
 										}
 									}									
 								}
@@ -99,12 +98,10 @@ var SysBuildTab={
 			tabname: table.alias||table.tablename,
 			tablevel:parenttab?1:0,
 			seqno:seqno,
-			description:table.description,
 			tableid:table.tableid,
 			windowid:this.window.windowid,
-			siteid:_context.user.siteid
+			siteid:n$.user.siteid
 		};
-		var self=this;
 		NUT.ds.select({url:NUT.URL+"n_column",orderby:"columnid",where:["tableid","=",table.tableid]},function(res){
 			if (res.success) {
 				var columns = res.result;
@@ -116,35 +113,36 @@ var SysBuildTab={
 						var fld = {
 							fieldname: col.alias||col.columnname,
 							fieldtype: col.linktableid || col.domainid ? "select" : col.datatype,
+							defaultvalue:col.defaultvalue,
 							isdisplaygrid: true,
-							isdisplayform: true,
+							isdisplayform: (col.columntype != "key"),
 							issearch: true,
 							seqno: col.seqno,
 							fieldlength: col.length,
 							isrequire: col.isnotnull,
-							isreadonly: col.isprikey,
-							domainid: col.domainid,
+							isreadonly: (col.columntype == "key"),
+							isfrozen: (col.columntype == "code"),
 							columnid: col.columnid,
 							siteid: n$.user.siteid
 						};
 						fields.push(fld);
 					}
-					NUT.ds.insert({ url: NUT.URL + "n_tab", data: tab }, function (res) {
-						if (res.success) {
-							if (callback) callback(res[0]);
-							for (var i = 0; i < fields.length; i++)fields[i].tabid = res.result[0].tabid;
-							self.insertFields(fields);
+					NUT.ds.insert({ url: NUT.URL + "n_tab", data: tab,returnid:true }, function (res2) {
+						if (res2.success) {
+							var id = res2.result[0];
+							if (callback) callback(id);
+							for (var i = 0; i < fields.length; i++)fields[i].tabid = id;
+							if (fields.length) {
+								NUT.ds.insert({ url: NUT.URL + "n_field", data: fields }, function (res3) {
+									if (res3.success) NUT.notify(fields.length+" fields inserted.", "lime");
+									else NUT.notify("⛔ ERROR: " + res3.result, "red");
+								});
+							}
 							NUT.notify("Record inserted.", "lime");
-						} else NUT.notify("⛔ ERROR: " + res.result, "red");
+						} else NUT.notify("⛔ ERROR: " + res2.result, "red");
 					});
 				}
-			}
+			} else NUT.notify("⛔ ERROR: " + res.result, "red");
 		})
 	},
-	insertFields:function(fields){
-		NUT.ds.insert({url:NUT.URL+"n_field",data:fields},function(res){
-			if (res.result) NUT.notify("Records inserted.", "lime");
-			else NUT.notify("⛔ ERROR: " + res.result, "red");
-		});
-	}
 }

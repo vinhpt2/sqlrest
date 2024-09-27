@@ -1,4 +1,5 @@
-import { w2ui, w2grid, w2toolbar, w2form, w2tabs, w2alert, w2popup, w2menu } from "../lib/w2ui.es6.min.js";
+import { w2ui, w2grid, w2toolbar, w2form, w2tabs, w2alert, w2popup } from "../lib/w2ui.es6.min.js";
+import { FieldImage } from "./fldimage.js";
 export class NWin {
 	constructor(id) {
 		this.id = id;
@@ -84,24 +85,17 @@ export class NWin {
 			}
 			if (fldconf.isdisplaygrid) {
 				var column = { field: fldconf.columnname, text: alias, size: "100px", sortable: true, frozen: fldconf.isfrozen, resizable: true, searchable: fldconf.issearch, options: { conf: fldconf } };
-				//if(fldconf.fieldtype=="int"||fldconf.fieldtype=="number"||fldconf.fieldtype=="currency"||fldconf.fieldtype=="date"||fldconf.fieldtype=="datetime"||fldconf.fieldtype=="percent")column.render=fldconf.fieldtype;
-				/*if(fldconf.linkwindowid){
-					column.render=function(record,index,column_index){					
-						var conf=this.columns[column_index].options.conf;
-						return "<a class='nut-link' onclick=`linkfield_onClick(" + conf.linkwindowid + ",'" + record[conf.columnname] + "','" + conf.whereclause + "')`>" + record[conf.columnname]+"</a>";
+				if(fldconf.fieldtype=="int"||fldconf.fieldtype=="number"||fldconf.fieldtype=="currency"||fldconf.fieldtype=="date"||fldconf.fieldtype=="datetime"||fldconf.fieldtype=="percent")column.render=fldconf.fieldtype;
+				if (domain) {
+					column.domain = domain;
+					column.render = function (record, obj) {
+						var col = this.columns[obj.colIndex];
+						return col.domain.lookup[obj.value];
 					}
-				}*/
+				}
 				if (!fldconf.isreadonly) {
 					column.editable = { type: fldconf.fieldtype };
-					if (domain) column.editable.items = domain.items;
-					/*if(domain&&fldconf.parentfieldid){
-						column.editable.lookup=domain.lookup;
-						column.render = function (record, index, column_index){
-							var col=this.columns[column_index];
-							var lookup=col.editable.lookup;
-							return lookup[record[col.field]];
-						}
-					}*/
+					if (domain)	column.editable.items = domain.items;
 				}
 				columns.push(column);
 			}
@@ -151,7 +145,7 @@ export class NWin {
 		if (!conf.isnotlock && conf.lock) items.push({ type: 'button', id: "LOCK", text: '🔒', tooltip: "_Lock/Unlock" });
 		if (isArchive) items.push({ type: 'button', id: "ARCH", text: '🕰️', tooltip: "_Archive" });
 		//if(conf.columnparent)items.push({type:'button',id:"TREE",text:'🎛️',tooltip:"Tree view"});
-		/*if(conf.filterfield){
+		if(conf.filterfield){
 			var filterfields=JSON.parse(conf.filterfield);
 			if(conf.filterdefaultvalue){//where filter
 				var filterdefaults=JSON.parse(conf.filterdefaultvalue);
@@ -184,7 +178,7 @@ export class NWin {
 					}
 				}
 			}
-		}*/
+		}
 		items.push({ type: 'spacer', id: "SPACE" });
 		var lookup = {};
 		for (var i = 0; i < conf.menus.length; i++) {
@@ -207,8 +201,7 @@ export class NWin {
 		{ type: 'button', id: "NEXT", text: '🡆', tooltip: "_Next", tag: +1 },
 		{ type: 'html', id: "STUT", html: "<div style='padding:6px'><span id='rec_" + conf.tabid + "'></span>/<span id='total_" + conf.tabid + "'></span></div>" },
 		{ type: 'break' },
-		{ type: 'check', id: "EXPD", text: "»", tooltip: "_Expand/Collapse" },
-		{ type: 'check', id: "CONF", text: "⋮", tooltip: "_Config Columns" }];
+		{ type: 'check', id: "EXPD", text: "»", tooltip: "_Expand/Collapse" }];
 
 		//toolbar
 		(w2ui[divTool.id] || new w2toolbar({
@@ -262,9 +255,6 @@ export class NWin {
 		var form=w2ui["form_"+tab.id];
 		var timeArchive=null;
 		switch (item.id) {
-			case "CONF":
-				grid.initColumnOnOff();
-				break;
 			case "EXPD":
 				document.getElementById("cont_" + tab.id).style.height = item.checked ? "45vh" : "80vh";
 				if (tab.isForm) form.resize(); else grid.resize();
@@ -684,6 +674,7 @@ export class NWin {
 		}
 	}
 	field_onChange(evt) {
+		return;
 		var conf=(evt.detail.column===undefined)?this.get(evt.target).options.conf:this.columns[evt.detail.column].options.conf;
 		if (conf.fieldtype == "search" || conf.fieldtype == "image") {
 			this.get(evt.target).el.onchange(value.current);
@@ -788,6 +779,8 @@ export class NWin {
 			}
 		}
 		if (this.record) {
+			n$.record = this.record;
+			n$.parent = this.parentRecord;
 			NWin.updateFormRecord(conf, this.record, this.parentRecord);
 			for (var i = 0; i < conf.children.length; i++)
 				NWin.updateChildGrids(conf.children[i], this.record);
@@ -842,7 +835,7 @@ export class NWin {
 			}
 		}
 	}
-	static updateChildFields(conf,record,parentRecord){
+	static updateChildFields(conf, record, parentRecord) {
 		for(var i=0;i<conf.children.length;i++){
 			fldconf=conf.children[i];
 			var form = w2ui[n$.idFormPopup || "form_" + fldconf.tabid];
@@ -926,8 +919,11 @@ export class NWin {
 		return result;
 	}
 	
-	grid_onDblClick (evt){
-		if(!this.columns[evt.detail.column].editable)NWin.switchFormGrid(this.tab,true);
+	grid_onDblClick(evt) {
+		if (NUT.isObjectEmpty(this.columns[evt.detail.column].editable)) {
+			w2ui["tool_" + this.tab.id].check("SWIT");
+			NWin.switchFormGrid(this.tab, true);
+		}
 	}
 	static switchFormGrid(tab, isForm) {
 		tab.isForm = isForm;
