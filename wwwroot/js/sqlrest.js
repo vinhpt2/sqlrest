@@ -61,8 +61,7 @@
 			if(this.readyState==XMLHttpRequest.DONE){
 				if(this.status==0||(this.status>=200&&this.status<400))
 					onok(JSON.parse(this.response));
-				else
-					this.onerror(this.response);
+				else this.onerror(this.response);
 			}
 		};
 		xhr.onerror = this.onerror;
@@ -92,8 +91,7 @@
 			if(this.readyState==XMLHttpRequest.DONE){
 				if(this.status==0||(this.status>=200&&this.status<400))
 					onok(JSON.parse(this.response));
-				else
-					this.onerror(this.response);
+				else this.onerror(this.response);
 			}
 		};
 		xhr.onerror=this.onerror;
@@ -108,8 +106,7 @@
 			if(this.readyState==XMLHttpRequest.DONE){
 				if(this.status==0||(this.status>=200&&this.status<400))
 					onok(this.response);
-				else
-					this.onerror(this.response);
+				else this.onerror(this.response);
 			}
 		};
 		xhr.onerror=this.onerror;
@@ -123,8 +120,7 @@
 			if(this.readyState==XMLHttpRequest.DONE){
 				if(this.status==0||(this.status>=200&&this.status<400))
 					onok(JSON.parse(this.response));
-				else
-					this.onerror(this.response);
+				else this.onerror(this.response);
 			}
 		};
 		if (p.where) p.url += "?where=" + this.decodeSql(p);
@@ -140,8 +136,7 @@
 			if(this.readyState==XMLHttpRequest.DONE){
 				if(this.status==0||(this.status>=200&&this.status<400))
 					onok(JSON.parse(this.response));
-				else
-					this.onerror(this.response);
+				else this.onerror(this.response);
 			}
 		};
 		xhr.onerror=this.onerror;
@@ -156,8 +151,7 @@
 			if(this.readyState==XMLHttpRequest.DONE){
 				if(this.status==0||(this.status>=200&&this.status<400))
 					onok(JSON.parse(this.response));
-				else
-					this.onerror(this.response);
+				else this.onerror(this.response);
 			}
 		};
 		xhr.onerror=this.onerror;
@@ -171,8 +165,7 @@
 			if(this.readyState==XMLHttpRequest.DONE){
 				if(this.status==0||(this.status>=200&&this.status<400))
 					onok(JSON.parse(this.response));
-				else
-					this.onerror(this.status);
+				else this.onerror(this.status);
 			}
 		};
 		xhr.onerror=this.onerror;
@@ -181,7 +174,21 @@
 		if (this.token) xhr.setRequestHeader("Authorization", this.token);
 		p.data?xhr.send(JSON.stringify(p.data)):xhr.send();
 	}
-
+	static upload (p, onok) {
+		var xhr = new XMLHttpRequest();
+		xhr.onreadystatechange = function () {
+			if (this.readyState == XMLHttpRequest.DONE) {
+				var res = JSON.parse(this.response);
+				if (this.status == 0 || (this.status >= 200 && this.status < 400))
+					onok(JSON.parse(this.response));
+				else this.onerror(this.status);
+			}
+		};
+		xhr.onerror = this.onerror;
+		xhr.open("POST", p.url, true);
+		if (this.token) xhr.setRequestHeader("Authorization", this.token);
+		xhr.send(p.data);
+	}
 	static onerror(err){
 		alert("⛔ ERROR: " + err);
 	}

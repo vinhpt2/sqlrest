@@ -22,6 +22,7 @@
 var NUT = {
 	URL: "https://localhost:7006/rest/nut/dbo/data/",
 	URL_DB: "https://localhost:7006/rest/nut/dbo/",
+	URL_UPLOAD: "https://localhost:7006/rest/file/",
 	URL_TOKEN: "https://localhost:7006/rest/token/nut",
 	shortcut:null,
 	ds: null,
@@ -32,7 +33,9 @@ var NUT = {
 	tables: {},
 	relates: {},
 	services: {},
-	isMobile : (window.orientation !== undefined),
+	isMobile: (window.orientation !== undefined),
+	canva: document.createElement("canvas"),
+	CAN_WIDTH:600,
 	ERD:{
 		window: ["windowid", "windowname", "windowtype", "appid", "execname", "isopensearch", "translate"],
 		tab: ["tabid", "parenttabid", "tabname", "tablevel", "seqno", "layoutcols", "linkchildfield", "linkparentfield", "linktableid", "whereclause", "orderbyclause", "tableid", "windowid", "relatechildfield", "relateparentfield", "relatetableid", "filterfield", "filterdefault", "isnotinsert", "isnotupdate", "isnotdelete", "isarchive", "islock", "isautosave", "translate"],
@@ -339,6 +342,48 @@ var NUT = {
 			window[com].run(data);
 		} else {//load component
 			document.head.z(["script", { src: "site/" + n$.app.siteid + "/" + n$.app.appid + "/" + com + ".js", onload: function () { window[com].run(data) } }]);
+		}
+	},
+	upload(tableid, recid, files) {
+		var imgArr = []; fileArr = [];
+		for (var i = 0; i < files.length; i++) {
+			var file = files[i];
+			file.type.startsWith("image") ? imgArr.push(file) : fileArr.push(file);
+		}
+		//images
+		if (imgArr.length) {
+			var count = 0;
+			var data = new FormData();
+			var ctx = NUT.canva.getContext("2d");
+			var img = new Image();
+			img.src = URL.createObjectURL(imgArr[count]);
+			img.onload = function () {
+				var needResize = this.width > NUT.CAN_WIDTH;
+				NUT.canva.width = needResize ? NUT.CAN_WIDTH : this.width;
+				NUT.canva.height = needResize ? Math.round(this.height * NUT.CAN_WIDTH / this.width) : this.height;
+				ctx.drawImage(this, 0, 0, NUT.canva.width, NUT.canva.height);
+				NUT.canva.toBlob(function (blob) {
+					data.append(imgArr[count].name, blob);
+					if (++count == imgArr.length) {
+						NUT.ds.upload({ url: NUT.URL_UPLOAD + n$.user.siteid + "/" + tableid + "/" + recid, data: data }, function (res) {
+							if (res.success) NUT.notify(res.total + " images uploaded.", "lime");
+							else NUT.notify(res.result, "yellow");
+						});
+					} else {
+						img.src = URL.createObjectURL(imgArr[count]);
+					}
+				});
+			}
+		}
+		if (fileArr.length){
+			var data = new FormData();
+			for (var i = 0; i < fileArr.length;i++)
+				data.append(fileArr[i].name, fileArr[i]);
+
+			NUT.ds.upload({ url: NUT.URL_UPLOAD+n$.user.siteid+"/"+tableid+"/"+recid, data: data }, function (res) {
+				if (res.success)NUT.notify(res.total + " files uploaded.","lime");
+				else NUT.notify(res.result, "yellow");
+			});
 		}
 	}
 }

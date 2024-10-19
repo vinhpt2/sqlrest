@@ -1,5 +1,4 @@
 import { w2ui, w2grid, w2toolbar, w2form, w2tabs, w2alert, w2popup } from "../lib/w2ui.es6.min.js";
-import { FieldImage } from "./fldimage.js";
 export class NWin {
 	constructor(id) {
 		this.id = id;
@@ -220,8 +219,7 @@ export class NWin {
 			onChange: this.field_onChange,
 			tab: tab
 		})).render(divForm);
-		divForm.style.display = "none";
-		//grid
+		//divForm.style.display = "none";
 
 		var grid = (w2ui[divGrid.id] || new w2grid({
 			name: divGrid.id,
@@ -350,23 +348,37 @@ export class NWin {
 												this.record[conf.linkchildfield]=parentKey;
 											}
 										}
-										var data={};//remove null value
-										for(var key in this.record)if(this.record.hasOwnProperty(key)&&this.record[key]!==null)
-											data[key]=this.record[key];
+										var data = {};//remove null value
+										var files = [];
+										for (var key in this.record) if (this.record.hasOwnProperty(key) && this.record[key] !== null) {
+											var val = this.record[key];
+											if (val && val[0] && val[0].file) {//file upload
+												var names = [];
+												for (var f in val) if (val.hasOwnProperty(f) && val[f]) {
+													files.push(val[f].file);
+													names.push(val[f].file.name);
+												}
+												data[key] = JSON.stringify(names);
+											} else data[key] = val;
+										}
 										if(conf.beforechange){
 											if(conf.onchange)NUT.runComponent(conf.onchange,{action:item.id,data:data,config:conf});
 										}else NUT.ds.insert({url:conf.table.urledit,data:data,returnid:true},function(res){
-											if(res.success){
+											if (res.success) {
+												var newid = res.result[0];
+												if (files.length) NUT.upload(conf.tableid, newid, files);//upload file
 												NUT.notify("Record inserted.","lime");
-												var newid=res.result[0];
+												
 												data[columnkey]=newid;
 												grid.add(data,true);
 												//grid.select(newid);
 												if(recRelate){
 													recRelate[conf.relatechildfiled]=data[conf.linkchildfield];
 													NUT.ds.insert({url:conf.relatetable.urledit,data:recRelate},function(res2){
-														if (res2.success)NUT.notify("Record inserted.","lime");
-														else NUT.notify("⛔ ERROR: " + res2.result, "red");
+														if (res2.success) {
+
+															NUT.notify("Record inserted.", "lime");
+														} else NUT.notify("⛔ ERROR: " + res2.result, "red");
 													});
 												}
 												if(conf.onchange)NUT.runComponent(conf.onchange,{action:item.id,data:data,config:conf});
@@ -388,22 +400,34 @@ export class NWin {
 					NUT.alert("⚠️ Can not update locked record","yellow");
 				else {
 					if(tab.isForm&form.validate(true).length)return;
-					
 					var changes=tab.isForm?[form.getChanges()]:grid.getChanges();
 					var hasChanged=false;
 					for(var i=0;i<changes.length;i++){
 						var change=changes[i];
-						if(!NUT.isObjectEmpty(change)){
-							var data={};//remove "" value
-							for(var key in change)if(change.hasOwnProperty(key)&&key!=columnkey)
-								data[key]=(change[key]===""?null:change[key]);
-							var recid=(tab.isForm?form.record[columnkey]:change[columnkey]);
+						if (!NUT.isObjectEmpty(change)) {
+							var recid = (tab.isForm ? form.record[columnkey] : change[columnkey]);
+
+							var data = {};//remove "" value
+							var files = [];
+							for (var key in change) if (change.hasOwnProperty(key) && key != columnkey) {
+								var val = form.record[key];//change[key];
+								if (val && val[0] && val[0].file) {//file upload
+									var names=[];
+									for (var f in val) if (val.hasOwnProperty(f)&&val[f]) {
+										files.push(val[f].file);
+										names.push(val[f].file.name);
+									}
+									data[key] = JSON.stringify(names);
+								} else data[key] = (val === ""?null:val);
+							}
+							
 							if(conf.beforechange){
 								if(conf.onchange)NUT.runComponent(conf.onchange,{action:item.id,recid:recid,data:data,config:conf});
 							}else{
 								var p = {url:conf.table.urledit,where:[columnkey,"=",recid],data:data};
 								NUT.ds.update(p, function (res) {
 									if (res.success) {
+										if (files.length) NUT.upload(conf.tableid, recid, files);//upload file
 										if (timeArchive) archiveRecord(conf.url, item.id, data, recid, conf.tableid, timeArchive);
 										if (tab.isForm) grid.set(recid, data);
 										NUT.notify("Record updated.","lime");
@@ -745,10 +769,8 @@ export class NWin {
 				this.noZoomTo = true;
 				if(select==0)this.select(records[0][this.recid]);
 			}
-			if (total == 1) {
-				w2ui["tool_" + tab.id].check("SWIT");
-				NWin.switchFormGrid(tab, true);
-			}
+			if (total == 1)w2ui["tool_" + tab.id].check("SWIT");
+			NWin.switchFormGrid(tab, total == 1);
 			document.getElementById("rec_" + tab.id).innerHTML = total?1:0;
 			document.getElementById("total_" + tab.id).innerHTML = total;
 		}
@@ -788,14 +810,20 @@ export class NWin {
 	}
 	static updateFormRecord(conf,record,parentRecord){
 		var form=w2ui["form_"+conf.tabid];
-		
 		//fire onchange
-		/*for(var i=0;i<form.fields.length;i++){
+		for(var i=0;i<form.fields.length;i++){
 			var field = form.fields[i];
-			var key = field.field;
+			if (field.type == 'file' && record[field.field]){
+				var files=JSON.parse(record[field.field]);
+				for(var j=0;j<files.length;j++){
+					files[j] ="<a class='nut-link' target='_blank' href='file/"+n$.user.siteid+"/"+conf.tableid+"/"+record[conf.table.columnkey]+"/"+files[j]+"'>"+files[j]+"</a>";
+				}
+				record[field.field]=files;
+			}
+			/*var key = field.field;
 			if (field.options.conf.children.length&&record[key]!=form.record[key])
-				form.onChange({target:key,value_old:form.record[key],value_new:record[key]});
-		}*/
+				form.onChange({target:key,value_old:form.record[key],value_new:record[key]});*/
+		}
 		
 		form.clear();
 		form.record=record;
@@ -926,12 +954,12 @@ export class NWin {
 		}
 	}
 	static switchFormGrid(tab, isForm) {
-		tab.isForm = isForm;
 		var form=w2ui["form_"+tab.id];
 		var grid=w2ui["grid_"+tab.id];
-		form.box.style.display = tab.isForm ?"":"none";
-		grid.box.style.display = tab.isForm ?"none":"";
-		tab.isForm?form.resize():grid.resize();
+		form.box.style.display = isForm ?"":"none";
+		grid.box.style.display = isForm ?"none":"";
+		isForm ? form.resize() : grid.resize();
+		tab.isForm = isForm;
 	}
 	xlsInsert_onClick(conf,csv){
 		if(csv.includes(","))

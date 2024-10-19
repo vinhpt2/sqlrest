@@ -1,4 +1,4 @@
-import { w2ui, w2layout, w2toolbar, w2form, w2utils, w2confirm, w2alert, w2popup, w2sidebar, w2tabs, w2tooltip } from "../lib/w2ui.es6.min.js";
+import { w2ui, w2layout, w2toolbar, w2form, w2utils, w2confirm, w2alert, w2popup, w2sidebar, w2tabs, w2tooltip, w2field } from "../lib/w2ui.es6.min.js";
 import { NWin } from "../js/window.js";
 import { SqlREST } from "../js/sqlrest.js";
 
@@ -15,6 +15,8 @@ NUT.w2layout = w2layout;
 NUT.w2toolbar = w2toolbar;
 NUT.w2sidebar = w2sidebar;
 NUT.w2tabs = w2tabs;
+NUT.w2tooltip = w2tooltip;
+NUT.w2field = w2field;
 
 window.onload = function () {
 	n$.user = null;
