@@ -31,13 +31,13 @@ var SysAddMissField={
 									isdisplayform: (col.columntype != "key"),
 									issearch: true,
 									seqno: col.seqno,
-									fieldlength: col.length,
 									isrequire: col.isnotnull,
 									isreadonly: (col.columntype == "key"),
 									isfrozen: (col.columntype == "code"),
 									columnid: col.columnid,
 									siteid: n$.user.siteid
 								};
+								if (fld.fieldtype != "data" && fld.fieldtype != "datetime") fld.fieldlength = col.length;
 								fields.push(fld);
 							}
 						}

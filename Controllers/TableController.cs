@@ -94,7 +94,7 @@ namespace SQLRestC.Controllers
 
         //create Table
         [HttpPost("{name}")]
-        public ResponseJson Create(String database,String schema, String name, List<ColumnJson> columns, String path=null)
+        public ResponseJson Create(String database,String schema, String name, List<ColumnJson> columns, String? path)
         {
             Server server = null;
             try
@@ -136,7 +136,7 @@ namespace SQLRestC.Controllers
 
         //rename Table
         [HttpPut("{name}")]
-        public ResponseJson Rename(String database, String schema, String name, String newName, String newPath=null)
+        public ResponseJson Rename(String database, String schema, String name, String newName, String? newPath)
         {
             Server server = null;
             try

@@ -1,5 +1,6 @@
+
 $().w2field("addType", "search", function (options) {
-	var self = this;
+	var that = this;
 	this.form = w2ui["divform_" + options.conf.tabid] || {};
 	this.formNew = w2ui["divnew_" + options.conf.tabid] || {};
 	this.el.style.width = "80px";
@@ -8,8 +9,8 @@ $().w2field("addType", "search", function (options) {
 		this.butSearch = document.createElement("button");
 		this.butSearch.innerHTML = " ... ";
 		this.butSearch.onclick = function (evt) {
-			var fldconf = self.options.conf;
-			_context.ctrlSearch = self;
+			var fldconf = that.options.conf;
+			_context.ctrlSearch = that;
 			NUT_DS.select({ url: NUT_URL + "sv_window_tab", where: [["windowtype", "=", "search"], ["tableid", "=", fldconf.foreigntableid]] }, function (res) {
 				if (res.length) {
 					NUT_DS.select({ url: NUT_URL + "syscache", where: ["windowid", "=", res[0].windowid] }, function (caches) {
@@ -43,8 +44,8 @@ $().w2field("addType", "search", function (options) {
 		//evt.stopImmediatePropagation();
 		if (evt instanceof Event) {
 			var value = this.value;
-			var fldconf = self.options.conf;
-			_context.ctrlSearch = self;
+			var fldconf = that.options.conf;
+			_context.ctrlSearch = that;
 			var p = { url: fldconf.foreigntable };
 
 			if (isNaN(parseInt(value)))

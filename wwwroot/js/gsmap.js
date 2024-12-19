@@ -4,16 +4,16 @@ var GSMap={
 	css:["lib/ol-6.9.0.min.css","js/kp/awt/css/awx.css","js/kp/awt/css/awb.css","js/kp/awt/css/awe.css","js/kp/awt/css/aws.css"],
 	loadLibrary:function() {
 		if(!window.ol){
-			var self=this;
+			var that=this;
 			var css=document.createElement("link");
 			css.rel="stylesheet";
 			css.href=this.css[0];
 			document.head.appendChild(css);
 			css.onload=function(){
-				for(var i=1;i<self.css.length;i++){
+				for(var i=1;i<that.css.length;i++){
 					var css=document.createElement("link");
 					css.rel="stylesheet";
-					css.href=self.css[i];
+					css.href=that.css[i];
 					document.head.appendChild(css);
 				}
 			}
@@ -21,9 +21,9 @@ var GSMap={
 			js.src=this.js[0];
 			document.head.appendChild(js);
 			js.onload=function(){
-				for(var i=1;i<self.js.length;i++){
+				for(var i=1;i<that.js.length;i++){
 					var js=document.createElement("script");
-					js.src=self.js[i];
+					js.src=that.js[i];
 					document.head.appendChild(js);
 				}
 			}
@@ -128,15 +128,15 @@ var GSMap={
 		awx.loadAWWidget(kp.awt.AWEdit,true);
 		awx.loadAWWidget(kp.awt.AWSnap);
 		awx.displayToolbox();
-		/*var self=this;
+		/*var that=this;
 		this.queryMetadata(this.url,lyrNames,function(res){
-			self.metadata={};
+			that.metadata={};
 			for(var i=0;i<res.featureTypes.length;i++){
 				var featType=res.featureTypes[i];
 				var prop={};
 				for(var j=0;j<featType.properties.length;j++)
 					prop[featType.properties[j].name]=featType.properties[j];
-				self.metadata[featType.typeName]=prop;
+				that.metadata[featType.typeName]=prop;
 			}
 		})*/
 	},

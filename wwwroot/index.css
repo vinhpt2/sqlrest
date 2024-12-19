@@ -1,3 +1,12 @@
+.nut-fld-helper {
+    position: absolute;
+    display: inline-block;
+}
+.nut-but-helper {
+    height: 27px;
+    border: none;
+    margin-left: 0px 1px 0px 1px;
+}
 .nut-fld-image {
     width: 150px;
     height: 150px;
@@ -5,9 +14,8 @@
 }
 
 .nut-fld-resize {
-    width: 154px;
-    resize: horizontal;
-    overflow: auto
+    width: 150px;
+    user-select: none;
 }
 
 .nut-full {
@@ -90,10 +98,11 @@
 .nut-link {
     color: brown;
     cursor: pointer;
+    padding:1px;
 }
 
 .nut-link:hover {
-    text-decoration: underline;
+    color:orangered;
 }
 
 .nut-table:before {

@@ -105,8 +105,8 @@ namespace SQLRestC.Controllers
         //alter table's Columns by column name (~)
         //add new if column name not exists (+)
         //delete if data type = null (-)
-        [HttpPost("{name}")]
-        public ResponseJson Alters(String database, String schema, String table, String name, List<ColumnJson> columns)
+        [HttpPost]
+        public ResponseJson Alter(String database, String schema, String table, List<ColumnJson> columns)
         {
             Server server = null;
             try
@@ -116,7 +116,7 @@ namespace SQLRestC.Controllers
                 var response = new ResponseJson { success = (db != null) };
                 if (response.success)
                 {
-                    var tb = new Table(db, table, schema);
+                    var tb = db.Tables[table, schema];
                     response.success = (tb!=null);
                     if (response.success)
                     {
@@ -157,8 +157,8 @@ namespace SQLRestC.Controllers
         }
 
         //edit column
-        [HttpPut("{name}")]
-        public ResponseJson Edit(String database, String schema, String table, String name, ColumnJson column)
+        [HttpPut]
+        public ResponseJson Edit(String database, String schema, String table,ColumnJson column)
         {
             Server server = null;
             try
@@ -168,7 +168,7 @@ namespace SQLRestC.Controllers
                 var response = new ResponseJson { success = (db != null) };
                 if (response.success)
                 {
-                    var tb = new Table(db, table, schema);
+                    var tb = db.Tables[table, schema];
                     response.success = (tb != null);
                     if (response.success)
                     {
@@ -176,10 +176,10 @@ namespace SQLRestC.Controllers
                         response.success = (obj != null);
                         if (response.success)
                         {
-                            Global.makeColumn(column, obj);
-                            obj.Alter();
+                            var col=Global.makeColumn(column, obj);
+                            col.Alter();
                         }
-                        else response.result = "Column '" + database + "." + schema + "."+table+"." + name + "' not found!";
+                        else response.result = "Column '" + database + "." + schema + "."+table+"." + column.name + "' not found!";
                     }
                     else response.result = "Table '" + database + "." + schema + "." + table + "' not found!";
                 }

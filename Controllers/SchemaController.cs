@@ -62,7 +62,8 @@ namespace SQLRestC.Controllers
                             name = obj.Name,
                             owner = obj.Owner,
                             tables = detail ? Global.getTableInfo(db, obj.Name, obj.IsSystemObject) : null,
-                            views = detail ? Global.getViewInfo(db, obj.Name, obj.IsSystemObject) : null
+                            views = detail ? Global.getViewInfo(db, obj.Name, obj.IsSystemObject) : null,
+                            procedures = detail ? Global.getProcedureInfo(db, obj.Name, obj.IsSystemObject) : null
                         };
                     }
                     else response.result = "Schema '" + database+"."+name + "' not found!";

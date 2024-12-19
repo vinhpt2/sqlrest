@@ -2,16 +2,17 @@ var SysBuildTab={
 	MAIN_TAB:"Main Tab",
 	run:function(p){
 		if(p.records.length){
-			var window=p.records[0];
-			NUT.ds.select({url:NUT.URL+"nv_appservice_table",where:["appid","=",window.appid]},function(res){
+			var appid=p.records[0].appid;
+			var windowid=p.records[0].windowid;
+			NUT.ds.select({url:NUT.URL+"nv_appservice_table",where:["appid","=",appid]},function(res){
 				if (res.success) {
 					var tables = res.result;
-					if (tables.length)NUT.ds.select({ url: NUT.URL + "n_tab", where: ["windowid", "=", window.windowid] }, function (res2) {
+					if (tables.length)NUT.ds.select({ url: NUT.URL + "n_tab", where: ["windowid", "=", windowid] }, function (res2) {
 							if (res2.success) {
 								var existTabs = {};
 								var tabs = res2.result;
 								for (var i = 0; i < tabs.length; i++) existTabs[tabs[i].tabid] = tabs[i];
-								SysBuildTab.showDlgBuild(tables, existTabs);
+								SysBuildTab.showDlgBuild(windowid,tables, existTabs);
 							} else NUT.notify("⛔ ERROR: " + res2.result, "red");
 						});
 					else NUT.notify("⚠️ No table in any data service!", "yellow");
@@ -19,7 +20,7 @@ var SysBuildTab={
 			});
 		} else NUT.notify("⚠️ No Window selected!","yellow");
 	},
-	showDlgBuild:function(tables, existTabs){
+	showDlgBuild:function(windowid,tables, existTabs){
 		var lookup={}, items=[], count=0;
 		for(var key in existTabs)if(existTabs.hasOwnProperty(key)){
 			var tab=existTabs[key];
@@ -38,17 +39,16 @@ var SysBuildTab={
 			var table=tables[i];
 			if(isBlank)items.push({id:table.tableid,text:table.tablename});
 			lookupTable[table.tableid]=table;
-			var fld={field:table.tableid,type:'checkbox',html:{label:table.tablename,column:i%2,attr:lookup[table.tableid]?"disabled":"tabindex=0"}};
+			var fld={field:table.tableid,type:'checkbox',html:{label:table.tablename,column:i%3,attr:lookup[table.tableid]?"disabled":"tabindex=0"}};
 			fields.push(fld);
 		}
 		fields[0].options={items:items};
 		var id="div_SysBuildTab";
 
 		NUT.w2popup.open({
-			title: '⛏️ Build tabs',
-			modal:true,
-			width: 700,
-			height: 500,
+			title: "_BuildTab",
+			width: 900,
+			height: 600,
 			body: '<div id="'+id+'" class="nut-full"></div>',
 			onOpen:function(evt){
 				evt.onComplete=function(){
@@ -59,29 +59,26 @@ var SysBuildTab={
 						record:lookup,
 						onChange:function(evt){
 							if (evt.target == SysBuildTab.MAIN_TAB){
-								var chk=document.getElementById(evt.value_new);
+								var chk=document.getElementById(evt.detail.value.current);
 								chk.checked=chk.disabled=true;
-								if(evt.value_previous){
-									chk=document.getElementById(evt.value_previous);
+								if(evt.detail.value.previous!=evt.detail.value.current){
+									chk=document.getElementById(evt.detail.value.previous);
 									chk.checked=chk.disabled=false;
 								}
-								
 							}
 						},
 						actions: {
-							"⛌ Close":function(){
-								NUT.w2popup.close();
-							},
-							"✔️ Build":function(){
+							"_Close":function(){NUT.w2popup.close()},
+							"_BuildTab":function(){
 								if(this.validate(true).length==0){
 									var change=this.getChanges();
-									if (isBlank) SysBuildTab.insertTab(lookupTable[this.record[SysBuildTab.MAIN_TAB]],0,null,function(mainTab){
+									if (isBlank) SysBuildTab.insertTab(windowid,lookupTable[this.record[SysBuildTab.MAIN_TAB]],0,null,function(mainTab){
 										for(key in change)if(change.hasOwnProperty(key)){
-											if (key != SysBuildTab.MAIN_TAB && change[key]) SysBuildTab.insertTab(lookupTable[key],++count,mainTab);
+											if (key != SysBuildTab.MAIN_TAB && change[key]) SysBuildTab.insertTab(windowid,lookupTable[key],++count,mainTab);
 										}
 									});else{
 										for(key in change)if(change.hasOwnProperty(key)){
-											if (key != SysBuildTab.MAIN_TAB && change[key]) SysBuildTab.insertTab(lookupTable[key], ++count, existTabs[this.record[SysBuildTab.MAIN_TAB]]);
+											if (key != SysBuildTab.MAIN_TAB && change[key]) SysBuildTab.insertTab(windowid,lookupTable[key], ++count, existTabs[this.record[SysBuildTab.MAIN_TAB]]);
 										}
 									}									
 								}
@@ -92,14 +89,14 @@ var SysBuildTab={
 			}
 		});
 	},
-	insertTab:function(table,seqno,parenttab,callback){
+	insertTab:function(windowid,table,seqno,parenttab,callback){
 		var tab={
 			parenttabid:parenttab?parenttab.tabid:null,
 			tabname: table.alias||table.tablename,
 			tablevel:parenttab?1:0,
 			seqno:seqno,
 			tableid:table.tableid,
-			windowid:this.window.windowid,
+			windowid:windowid,
 			siteid:n$.user.siteid
 		};
 		NUT.ds.select({url:NUT.URL+"n_column",orderby:"columnid",where:["tableid","=",table.tableid]},function(res){
@@ -118,13 +115,13 @@ var SysBuildTab={
 							isdisplayform: (col.columntype != "key"),
 							issearch: true,
 							seqno: col.seqno,
-							fieldlength: col.length,
 							isrequire: col.isnotnull,
 							isreadonly: (col.columntype == "key"),
 							isfrozen: (col.columntype == "code"),
 							columnid: col.columnid,
 							siteid: n$.user.siteid
 						};
+						if (fld.fieldtype != "data" && fld.fieldtype != "datetime") fld.fieldlength = col.length;
 						fields.push(fld);
 					}
 					NUT.ds.insert({ url: NUT.URL + "n_tab", data: tab,returnid:true }, function (res2) {

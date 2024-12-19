@@ -2,36 +2,32 @@ var SysPreviewWindow={
 	run:function(p){
 		if(p.records.length){
 			var windowid=p.records[0].windowid;
-			var self=this;
-			var conf=_context.winconfig[windowid];
-			if(conf){
-				self.showDlgWorkflow(conf);
-			}else{
-				NUT.ds.select({url:NUT.URL+"syscache",where:["windowid","=",windowid]},function(res){
-					if(res.length){
-						conf=NUT.configWindow(zipson.parse(res[0].config));
-						conf.tabid=conf.windowid;
-						
-						var needCaches=[];
-						for(key in conf.needCache)if(conf.needCache.hasOwnProperty(key)&&!_context.domain[key])
-							needCaches.push(conf.needCache[key]);
-						self.showDlgPreview(conf,needCaches);
+			NUT.ds.select({url:NUT.URL+"n_cache",where:["windowid","=",windowid]},function(res){
+				if(res.success&&res.result.length){
+					var conf=NUT.configWindow(zipson.parse(res.result[0].configjson));
+					conf.tabid=conf.windowid;
+
+					var needCaches = [];
+					for (var key in conf.needCache) {
+						if (conf.needCache.hasOwnProperty(key) && !NUT.dmlinks[key]) needCaches.push(conf.needCache[key]);
 					}
-				});
-			}
-		}else NUT.tagMsg("No Window selected!","yellow");
+					SysPreviewWindow.showDlgPreview(conf, needCaches);
+				} else NUT.notify("⚠️ Selected window has no cache!", "yellow");
+			});
+		} else NUT.notify("⚠️ No Window selected!","yellow");
 	},
 	showDlgPreview:function(conf,needCaches){
-		var id="divCom_SysPreviewWindow";
-		w2popup.open({
-			title: '👁️ <i>Preview</i> - '+ conf.windowname,
-			width: 900,
-			height: 800,
+		var id="div_SysPreviewWindow";
+		NUT.w2popup.open({
+			title: "_Preview",
+			width: 1000,
+			height: 700,
 			body: '<div id="'+id+'" class="nut-full"></div>',
 			onOpen:function(evt){
-				evt.onComplete=function(){
+				evt.onComplete = function () {
+					var win = new NUT.NWin(id);
 					var div=document.getElementById(id);
-					needCaches?cacheDomainAndOpenWindow(div,conf,needCaches,0):buildWindow(div,conf,0);
+					needCaches ? win.cacheDomainAndOpenWindow(div, conf, needCaches, 0) :win.buildWindow(div,conf,0);
 				}
 			}
 		});

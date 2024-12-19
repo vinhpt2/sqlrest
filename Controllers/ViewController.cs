@@ -92,7 +92,7 @@ namespace SQLRestC.Controllers
 
         //create View
         [HttpPost("{name}")]
-        public ResponseJson Create(String database,String schema, String name, String sql, String path=null)
+        public ResponseJson Create(String database,String schema, String name, SqlJson json, String? path)
         {
             Server server = null;
             try
@@ -106,8 +106,8 @@ namespace SQLRestC.Controllers
                     if (response.success)
                     {
                         var obj = new View(db, name,schema);
-                        //obj.TextHeader = "CREATE VIEW " + schema + "." + name+" AS";
-                        obj.TextBody = sql;
+                        obj.TextHeader = "CREATE VIEW " + schema + "." + name + " AS";
+                        obj.TextBody = json.sql;
                         obj.Create();
                         if (!String.IsNullOrEmpty(path))
                         {
@@ -132,7 +132,7 @@ namespace SQLRestC.Controllers
 
         //rename View
         [HttpPut("{name}")]
-        public ResponseJson Rename(String database, String schema, String name, String newName, String newPath=null)
+        public ResponseJson Rename(String database, String schema, String name, String newName, String? newPath)
         {
             Server server = null;
             try

@@ -13,99 +13,17 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="nut\**" />
-    <Compile Remove="wwwroot\carbon\**" />
-    <Compile Remove="wwwroot\client\**" />
-    <Compile Remove="wwwroot\nut2\**" />
     <Content Remove="nut\**" />
-    <Content Remove="wwwroot\carbon\**" />
-    <Content Remove="wwwroot\client\**" />
-    <Content Remove="wwwroot\nut2\**" />
     <EmbeddedResource Remove="nut\**" />
-    <EmbeddedResource Remove="wwwroot\carbon\**" />
-    <EmbeddedResource Remove="wwwroot\client\**" />
-    <EmbeddedResource Remove="wwwroot\nut2\**" />
     <None Remove="nut\**" />
-    <None Remove="wwwroot\carbon\**" />
-    <None Remove="wwwroot\client\**" />
-    <None Remove="wwwroot\nut2\**" />
   </ItemGroup>
   <ItemGroup>
-    <Content Remove="wwwroot\js\fldimage.js" />
-    <Content Remove="wwwroot\js\fldsearch.js" />
-    <Content Remove="wwwroot\js\geoserver.js" />
-    <Content Remove="wwwroot\js\global.js.bak" />
-    <Content Remove="wwwroot\js\gsmap.js" />
-    <Content Remove="wwwroot\js\kp\awt\AWBasic.js" />
-    <Content Remove="wwwroot\js\kp\awt\AWEdit.js" />
-    <Content Remove="wwwroot\js\kp\awt\AWSnap.js" />
-    <Content Remove="wwwroot\js\kp\awt\AWToolbox.js" />
-    <Content Remove="wwwroot\js\kp\awt\lib\awt.js" />
-    <Content Remove="wwwroot\js\kp\awt\lib\ControlLayer.js" />
-    <Content Remove="wwwroot\js\kp\awt\lib\DrawHelper.js" />
-    <Content Remove="wwwroot\js\kp\awt\lib\EditHelper.js" />
-    <Content Remove="wwwroot\js\kp\awt\lib\Editor.js" />
-    <Content Remove="wwwroot\js\lang.js" />
-    <Content Remove="wwwroot\js\nut.js" />
-    <Content Remove="wwwroot\js\pgrest.js" />
-    <Content Remove="wwwroot\js\sqlrest.js" />
-    <Content Remove="wwwroot\js\sqlrest.js.bak" />
+    <Content Remove="wwwroot\site\2\5\DailyM03Report.html" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.32" />
     <PackageReference Include="Microsoft.SqlServer.SqlManagementObjects" Version="171.30.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.20.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="wwwroot\js\fldimage.js" />
-    <None Include="wwwroot\js\fldsearch.js" />
-    <None Include="wwwroot\js\geoserver.js" />
-    <None Include="wwwroot\js\nut.js">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\js\nut.js.bak" />
-    <None Include="wwwroot\js\gsmap.js" />
-    <None Include="wwwroot\js\kp\awt\AWBasic.js" />
-    <None Include="wwwroot\js\kp\awt\AWEdit.js" />
-    <None Include="wwwroot\js\kp\awt\AWSnap.js" />
-    <None Include="wwwroot\js\kp\awt\AWToolbox.js" />
-    <None Include="wwwroot\js\kp\awt\lib\awt.js" />
-    <None Include="wwwroot\js\kp\awt\lib\ControlLayer.js" />
-    <None Include="wwwroot\js\kp\awt\lib\DrawHelper.js" />
-    <None Include="wwwroot\js\kp\awt\lib\EditHelper.js" />
-    <None Include="wwwroot\js\kp\awt\lib\Editor.js" />
-    <None Include="wwwroot\js\lang.js" />
-    <None Include="wwwroot\js\pgrest.js" />
-    <None Include="wwwroot\js\sqlrest.js">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\js\sqlrest.js.bak" />
-    <None Include="wwwroot\js\window.js" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Update="wwwroot\help.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\index.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-    <Content Update="wwwroot\index.html.bak">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-    <Content Update="wwwroot\index.js">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-    <Content Update="wwwroot\index.js.bak">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="wwwroot\file\" />
   </ItemGroup>
 </Project>

@@ -6,8 +6,10 @@ using Microsoft.SqlServer.Management.Smo;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Data;
 using System.Diagnostics.Eventing.Reader;
+using System.Reflection;
 using System.Text.Json;
 
 namespace SQLRestC.Controllers
@@ -101,10 +103,11 @@ namespace SQLRestC.Controllers
                 if (response.success)
                 {
                     var tb = db.Tables[table, schema];
-                    response.success = (tb != null);
+                    TableViewBase tvb = (tb != null ? tb : db.Views[table, schema]);
+                    response.success = (tvb != null);
                     if (response.success)
                     {
-                        var index = tb.Indexes[0];
+                        var index = tvb.Indexes[0];
                         response.success = (index != null && index.IndexKeyType == IndexKeyType.DriPrimaryKey);
                         if (response.success) {
                             var primaryKey = index.IndexedColumns[0].Name;
@@ -132,9 +135,9 @@ namespace SQLRestC.Controllers
                             }
                             else response.result = "SQL INJECTION FOUND! Not safe to executes.";
                         }
-                        else response.result = "Table '" + database + "." + schema + "." + table + "' does not have primary key!";
+                        else response.result = "Table/View '" + database + "." + schema + "." + table + "' does not have primary key!";
                     }
-                    else response.result = "Table '" + database + "." + schema + "." + table + "' not found!";
+                    else response.result = "Table/View '" + database + "." + schema + "." + table + "' not found!";
                 }
                 else response.result = "Database '" + database + "' not found!";
                 return response;
@@ -163,7 +166,6 @@ namespace SQLRestC.Controllers
                 var response = new ResponseJson { success = (db != null) };
                 if (response.success)
                 {
-
                     var sqls = new String[data.Length];
                     for (var i = 0; i < data.Length; i++)
                     {
@@ -221,7 +223,7 @@ namespace SQLRestC.Controllers
 
         //update data in table
         [HttpPut]
-        public ResponseJson Update(String database, String schema, String table, String where, Dictionary<String, Object> data)
+        public ResponseJson Update(String database, String schema, String table, Dictionary<String, Object>[] data, String? where,String? key)
         {
             Server server = null;
             try
@@ -231,125 +233,92 @@ namespace SQLRestC.Controllers
                 var response = new ResponseJson { success = (db != null) };
                 if (response.success)
                 {
-                    var tb = db.Tables[table, schema];
-                    response.success = (tb != null);
-                    if (response.success)
+                    var sqls = new String[data.Length];
+                    if (key == null)//update with where
                     {
-                        var keys = data.Keys.ToArray();
-                        var values = data.Values.ToArray();
-                        var clauses=new String[values.Length];
-                        for (int j = 0; j < values.Length; j++)
-                        {
-                            if (values[j] == null) clauses[j]=keys[j] + "=null";
-                            else {
-                                var val = (JsonElement)values[j];
-                                if (val.ValueKind == JsonValueKind.String) clauses[j]=keys[j] + "=N'" + val + "'";
-                                else if (val.ValueKind == JsonValueKind.True) clauses[j]=keys[j] + "="+ 1;
-                                else if (val.ValueKind == JsonValueKind.False) clauses[j]=keys[j] + "=" + 0;
-                                else clauses[j]=keys[j]+"="+ val;
-                            }
-                        }
-                        var sqlStr = "update " + database + "." + schema + "." + table + " set " + String.Join(",", clauses) + " where " + where;
-                        response.success = Global.safeSqlInjection(sqlStr);
-                        if (response.success)
-                            db.ExecuteNonQuery(sqlStr);
-                        else
-                            response.result = "SQL INJECTION FOUND. Not safe to executes.";
-                    }
-                    else response.result = "Table '" + database + "." + schema + "." + table + "' not found!";
-                }
-                else response.result = "Database '" + database + "' not found!";
-                return response;
-            }
-            catch (Exception ex)
-            {
-                return new ResponseJson { success = false, result = ex.Message };
-            }
-            finally
-            {
-                if (server != null) server.ConnectionContext.Disconnect();
-            }
-
-        }
-        //update data in table
-        [HttpPatch]
-        public ResponseJson UpdateById(String database, String schema, String table, Dictionary<String, Object>[] data)
-        {
-            Server server = null;
-            try
-            {
-                server = new Server(new ServerConnection(Global.server, Global.username, Global.password));
-                var db = server.Databases[database];
-                var response = new ResponseJson { success = (db != null) };
-                if (response.success)
-                {
-                    var tb = db.Tables[table, schema];
-                    response.success = (tb != null);
-                    if (response.success)
-                    {
-                        var index = tb.Indexes[0];
-                        response.success = (index != null && index.IndexKeyType == IndexKeyType.DriPrimaryKey);
+                        response.success = (where != null);
                         if (response.success)
                         {
-                            var primaryKey = index.IndexedColumns[0].Name;
-                            var sqls = new String[data.Length];
                             for (var i = 0; i < data.Length; i++)
                             {
                                 var rec = data[i];
-
-                                response.success = rec.ContainsKey(primaryKey);
-                                if (!response.success)
-                                {
-                                    response.result = "Record " + i + "th does NOT have primary key";
-                                    break;
-                                }
-                                response.success = (rec[primaryKey] != null);
-                                if (!response.success)
-                                {
-                                    response.result = "Record " + i + "th does NOT have primary key = NULL";
-                                    break;
-                                }
-
-                                var primaryVal = (JsonElement)rec[primaryKey];
                                 var keys = rec.Keys.ToArray();
                                 var values = rec.Values.ToArray();
                                 var clauses = new String[values.Length];
                                 for (int j = 0; j < values.Length; j++)
                                 {
-                                    if (!primaryKey.Equals(keys[j]))
+                                    var k = keys[j];
+                                    var value = values[j];
+                                    String clause = null;
+                                    if (value == null) clause = k + "=null";
+                                    else
                                     {
-                                        if (values[j] == null) clauses[j]=keys[j] + "=null";
-                                        else
-                                        {
-                                            var val = (JsonElement)values[j];
-                                            if (val.ValueKind == JsonValueKind.String) clauses[j] = keys[j] + "=N'" + val + "'";
-                                            else if (val.ValueKind == JsonValueKind.True) clauses[j] = keys[j] + "=" + 1;
-                                            else if (val.ValueKind == JsonValueKind.False) clauses[j] = keys[j] + "=" + 0;
-                                            else clauses[j] = keys[j] + "=" + val;
-                                        }
+                                        var val = (JsonElement)value;
+                                        if (val.ValueKind == JsonValueKind.String) clause = k + "=N'" + val + "'";
+                                        else if (val.ValueKind == JsonValueKind.True) clause = k + "=" + 1;
+                                        else if (val.ValueKind == JsonValueKind.False) clause = k + "=" + 0;
+                                        else clause = k + "=" + val;
                                     }
+                                    clauses[j] = clause;
                                 }
-                                var sqlStr = "update " + database + "." + schema + "." + table + " set " + String.Join(",", clauses) + " where " + primaryKey + "=" + (primaryVal.ValueKind == JsonValueKind.String ? "N'" + primaryVal + "'" : primaryVal);
+                                var sqlStr = "update " + database + "." + schema + "." + table + " set " + String.Join(",", clauses) + " where " + where;
                                 response.success = Global.safeSqlInjection(sqlStr);
                                 if (!response.success)
                                 {
-                                    response.result = "SQL INJECTION FOUND in record " + i + "th. Not safe to executes.";
+                                    response.result = "SQL INJECTION FOUND. Not safe to executes!";
                                     break;
                                 }
                                 sqls[i] = sqlStr;
                             }
-                            if (response.success)
-                            {
-                                db.ExecuteNonQuery(String.Join(";", sqls));
-                            }
-                        }
-                        else response.result = "Table '" + database + "." + schema + "." + table + "' does not have primary key!";
+                        }else response.result = "Update no where not allow!";
                     }
-                    else response.result = "Table '" + database + "." + schema + "." + table + "' not found!";
+                    else
+                    { //Update by key
+                        for (var i = 0; i < data.Length; i++)
+                        {
+                            var rec = data[i];
+                            var keys = rec.Keys.ToArray();
+                            var values = rec.Values.ToArray();
+                            var clauses = new String[values.Length - 1];
+                            var count = 0;
+                            where = null;
+                            for (int j = 0; j < values.Length; j++)
+                            {
+                                var k = keys[j];
+                                var value = values[j];
+                                String clause = null;
+                                if (value == null) clause = k + "=null";
+                                else
+                                {
+                                    var val = (JsonElement)value;
+                                    if (val.ValueKind == JsonValueKind.String) clause = k + "=N'" + val + "'";
+                                    else if (val.ValueKind == JsonValueKind.True) clause = k + "=" + 1;
+                                    else if (val.ValueKind == JsonValueKind.False) clause = k + "=" + 0;
+                                    else clause = k + "=" + val;
+                                }
+                                if (key.Equals(k)) where = clause;
+                                else clauses[count++] = clause;
+                            }
+                            response.success = (count == clauses.Length && where != null);
+                            if (!response.success)
+                            {
+                                response.result = "Update no where not allow!";
+                                break;
+                            }
+                            var sqlStr = "update " + database + "." + schema + "." + table + " set " + String.Join(",", clauses) + " where " + where;
+                            response.success = Global.safeSqlInjection(sqlStr);
+                            if (!response.success)
+                            {
+                                response.result = "SQL INJECTION FOUND. Not safe to executes!";
+                                break;
+                            }
+                            sqls[i] = sqlStr;
+                        }
+                    }
+                    if (response.success) db.ExecuteNonQuery(String.Join(";", sqls));
                 }
                 else response.result = "Database '" + database + "' not found!";
                 return response;
-
             }
             catch (Exception ex)
             {
@@ -361,6 +330,7 @@ namespace SQLRestC.Controllers
             }
 
         }
+        
         //delete data in table
         [HttpDelete]
         public ResponseJson Delete(String database, String schema, String table, String where)
@@ -373,19 +343,13 @@ namespace SQLRestC.Controllers
                 var response = new ResponseJson { success = (db != null) };
                 if (response.success)
                 {
-                    var tb = db.Tables[table, schema];
-                    response.success = (tb != null);
+                    var sql = "delete " + database + "." + schema + "." + table + " where " + where;
+                    response.success = Global.safeSqlInjection(sql);
                     if (response.success)
                     {
-                        var sql = "delete " + database + "." + schema + "." + table + " where " + where;
-                        response.success = Global.safeSqlInjection(sql);
-                        if (response.success)
-                        {
-                            db.ExecuteNonQuery(sql);
-                        }
-                        else response.result = "SQL INJECTION FOUND! Not safe to executes.";
+                        db.ExecuteNonQuery(sql);
                     }
-                    else response.result = "Table '" + database + "." + schema + "." + table + "' not found!";
+                    else response.result = "SQL INJECTION FOUND! Not safe to executes.";
                 }
                 else response.result = "Database '" + database + "' not found!";
                 return response;

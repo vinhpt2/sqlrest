@@ -56,7 +56,7 @@ namespace SQLRestC.Controllers
                                 user.userid = rec["userid"].ToString();
                                 user.siteid = rec["siteid"].ToString();
                                 user.columnorg = rec["columnorg"] is DBNull ? null : (String)rec["columnorg"];
-                                var sql2 = "select roleid,rolename from n_role where siteid="+user.siteid+" and roleid in(select roleid from n_roleuser where userid=" + user.userid + ") order by seqno";
+                                var sql2 = "select roleid,rolename from n_role where roleid in(select roleid from n_roleuser where siteid="+user.siteid+" and userid=" + user.userid + ") order by seqno";
                                 
                                 if (user.columnorg!=null) sql2 += ";select orgid,orgname from n_org where siteid=" + user.siteid + " and orgid in(select orgid from n_orguser where userid=" + user.userid + ") order by seqno";
                                 using (var ds2 = db.ExecuteWithResults(sql2))
@@ -143,7 +143,7 @@ namespace SQLRestC.Controllers
                             response.success = (user.columnorg == null || user.orgs.ContainsKey(orgid));
                             if (response.success)
                             {
-                                user.orgwhere = user.columnorg+"="+orgid;
+                                //user.orgwhere = user.columnorg+"="+orgid;
                                 server = new Server(new ServerConnection(Global.server, Global.username, Global.password));
                                 var db = server.Databases[database];
                                 response.success = (db != null);

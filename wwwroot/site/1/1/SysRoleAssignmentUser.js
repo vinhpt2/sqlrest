@@ -1,5 +1,5 @@
 var SysRoleAssignmentUser={
-	run:function(p.records){
+	run:function(p){
 		if(p.records.length){
 			this.app=p.parent;
 			this.role=p.records[0];

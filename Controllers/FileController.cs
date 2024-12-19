@@ -19,7 +19,7 @@ namespace SQLRestC.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route(Global.ROOT + "file/{siteid}/{tableid}/{recid}")]
+    [Route(Global.ROOT + "upload/{siteid}/{tableid}/{recid}")]
     public class FileController : ControllerBase
     {
         //select data in table
@@ -27,18 +27,21 @@ namespace SQLRestC.Controllers
         public async Task<ResponseJson> Upload(String siteid, String tableid, String recid)
         {
             try{
-                var path = "wwwroot/file/" + siteid + "/" + tableid + "/" + recid+"/";
+                var prefix = "media/" + siteid + "/" + tableid + "/" + recid + "/";
+                var path = "wwwroot/"+prefix;
                 if (!Directory.Exists(path)) Directory.CreateDirectory(path);
                 var formData = await Request.ReadFormAsync();
-                int i = 0;
-                for (;i < formData.Files.Count; i++)
+                var names = new String[formData.Files.Count];
+                for (var i = 0; i < formData.Files.Count; i++)
                 {
                     var file = formData.Files[i];
-                    var stream = new FileStream(path + file.Name, FileMode.OpenOrCreate);
-                    formData.Files[i].CopyToAsync(stream);
-                    stream.Close();
+                    using (var stream = new FileStream(path + file.Name, FileMode.OpenOrCreate))
+                    {
+                        file.CopyTo(stream);
+                    }
+                    names[i] = prefix+file.Name;
                 }
-                return new ResponseJson { success = true,result=path,total=i};
+                return new ResponseJson { success = true,result=names,total=names.Length};
             } catch (Exception ex) {
                 return new ResponseJson { success = false,result=ex.Message };
             }

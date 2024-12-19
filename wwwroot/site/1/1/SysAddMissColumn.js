@@ -2,11 +2,12 @@ var SysAddMissColumn={
 	run:function(p){
 		if(p.records.length){
 			var table=p.records[0];
+			var url=p.parent.url;
 			NUT.confirm("Add missing columns for table '"+table.tablename+"'?",function(evt){
 				if (evt == "yes") {
-					NUT.ds.call({ url: NUT.URL_DB + "table/" + table.tablename + "?detail=true" }, function (res) {
+					NUT.ds.get({ url: url + table.tabletype+ "/" + table.tablename + "?detail=true" }, function (res) {
 						if (res.success) {
-							SysAddMissColumn.addMissColumn(table.tableid, res.result.columns);
+							SysAddMissColumn.addMissColumn(url,table.tableid, res.result.columns);
 						} else NUT.notify("⛔ ERROR: " + res.result, "red");
 					});
 				}
@@ -14,7 +15,7 @@ var SysAddMissColumn={
 		} else NUT.notify("⚠️ No table selected!","yellow");
 	},
 	
-	addMissColumn: function (tableid, colInfo) {
+	addMissColumn: function (url,tableid, colInfo) {
 		NUT.ds.select({ url: NUT.URL + "n_column", select: "columnname", where: ["tableid", "=", tableid] }, function (res) {
 			if (res.success) {
 				var lookup = {};

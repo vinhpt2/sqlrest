@@ -2,17 +2,18 @@ var SysImportTable={
 	run:function(p){
 		if(p.records.length){
 			var serviceid=p.records[0].serviceid;
+			var url=p.records[0].url;
 			NUT.ds.select({ url: NUT.URL + "n_table",select:"tablename", where: ["serviceid", "=", serviceid] }, function (res) {
 				if (res.success) {
 					var lookup = {};
 					for (var i = 0; i < res.result.length; i++)
 						lookup[res.result[i].tablename] = true;
 
-					NUT.ds.call({ url: NUT.URL_DB + "table" }, function (res2) {
+					NUT.ds.get({ url: url + "table" }, function (res2) {
 						if (res2.success) {
-							NUT.ds.call({ url: NUT.URL_DB + "view" }, function (res3) {
+							NUT.ds.get({ url: url + "view" }, function (res3) {
 								if (res3.success) {
-									SysImportTable.showDlgImport(res2.result, res3.result, lookup,serviceid);
+									SysImportTable.showDlgImport(url,res2.result, res3.result, lookup,serviceid);
 								} else NUT.notify("⛔ ERROR: " + res3.result, "red");
 							});
 						} else NUT.notify("⛔ ERROR: " + res2.result, "red");
@@ -22,7 +23,7 @@ var SysImportTable={
 		} else NUT.notify("⚠️ No Data Service selected!","yellow");
 	},
 	
-	showDlgImport: function (tables, views, lookup,serviceid) {
+	showDlgImport: function (url,tables, views, lookup,serviceid) {
 		var fields = [], lookupType = {};
 		for (var i = 0; i < tables.length; i++) {
 			var name = tables[i].name;
@@ -37,7 +38,6 @@ var SysImportTable={
 		var id="div_SysImportTable";
 		NUT.w2popup.open({
 			title: '_Import',
-			modal:true,
 			width: 700,
 			height: 600,
 			body: '<div id="'+id+'" class="nut-full"></div>',
@@ -55,7 +55,7 @@ var SysImportTable={
 							"_Import":function(){
 								var change=this.getChanges();
 								for(key in change)if(change.hasOwnProperty(key)){
-									if (change[key]) SysImportTable.insertTable(key,lookupType[key],serviceid);
+									if (change[key]) SysImportTable.insertTable(url,key,lookupType[key],serviceid);
 								}
 							}
 						}
@@ -64,8 +64,8 @@ var SysImportTable={
 			}
 		});
 	},
-	insertTable: function (name,type,serviceid) {
-		NUT.ds.call({ url: NUT.URL_DB + "table/"+name+"?detail=true" }, function (res) {
+	insertTable: function (url,name,type,serviceid) {
+		NUT.ds.get({ url: url + type+"/"+name+"?detail=true" }, function (res) {
 			if (res.success) {
 				var table = res.result;
 				var cols = [];
@@ -98,7 +98,7 @@ var SysImportTable={
 						for (var i = 0; i < cols.length; i++) cols[i].tableid = id;
 						if (cols.length) {//insert cols
 							NUT.ds.insert({ url: NUT.URL + "n_column", data: cols }, function (res3) {
-								if (res3.sucess) NUT.notify(cols.length + " columns inserted.", "lime");
+								if (res3.success) NUT.notify(cols.length + " columns inserted.", "lime");
 								else NUT.notify("⛔ ERROR: " + res3.result, "red");
 							});
 						}

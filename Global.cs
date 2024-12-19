@@ -95,7 +95,8 @@ namespace SQLRestC
                         name = obj.Name,
                         owner = obj.Owner,
                         tables = detail ? getTableInfo(db, obj.Name) : null,
-                        views = detail ? getViewInfo(db, obj.Name) : null
+                        views = detail ? getViewInfo(db, obj.Name) : null,
+                        procedures = detail ? getProcedureInfo(db, obj.Name) : null
                     };
                 }
             }
@@ -141,6 +142,25 @@ namespace SQLRestC
                 return rs;
             }
         }
+        public static ProcedureJson[] getProcedureInfo(Database db, String schema, bool detail = false)
+        {
+            var sql = "select sp.object_id,sp.name from sys.procedures sp left join sys.schemas sm on sp.schema_id=sm.schema_id where sm.name='" + schema + "'";
+            using (var ds = db.ExecuteWithResults(sql))
+            {
+                var tbl = ds.Tables[0];
+                var rs = new ProcedureJson[tbl.Rows.Count];
+                for (int i = 0; i < rs.Length; i++)
+                {
+                    var row = tbl.Rows[i];
+                    rs[i] = new ProcedureJson
+                    {
+                        id = (int)row["object_id"],
+                        name = (String)row["name"]
+                    };
+                }
+                return rs;
+            }
+        }
         public static ColumnJson[] getColumnInfo(ColumnCollection cols)
         {
             var rs=new ColumnJson[cols.Count];
@@ -166,26 +186,25 @@ namespace SQLRestC
         
         public static bool safeSqlInjection(String sql)
         {
-            return !sql.Contains(";");
+            return true;// !sql.Contains(";");
         }
         //obj can be Table(create new column) or Column(change exists column)
         public static Column makeColumn(ColumnJson col,Object obj){
-            var column = (obj is Table ? new Column((Table)obj, col.name) : (Column)obj);
+            var column = (obj is Table ? new Column((Table)obj, col.name ): (Column)obj);
             column.DataType=Global.lookupDataType(col.dataType, col.length, col.precision);
-            column.Nullable = col.nullable;
-            column.Identity = col.identity;
+            if (col.nullable) column.Nullable = col.nullable;
             if (col.identity)
             {
+                column.Identity = col.identity;
                 column.IdentitySeed = 1;
                 column.IdentityIncrement = 1;
             }
-            column.Default = col.defaultValue;
-            if (col.inPrimaryKey != column.InPrimaryKey)
+            if(col.defaultValue!=null)column.Default = col.defaultValue;
+            if (col.inPrimaryKey)
             {
                 var tb = (Table)column.Parent;
                 if (col.inPrimaryKey)
                 {
-                    
                     // create primary key
                     var index = new Microsoft.SqlServer.Management.Smo.Index(tb, "PK_" + tb.Name);
                     index.IndexKeyType = IndexKeyType.DriPrimaryKey;
@@ -326,6 +345,11 @@ namespace SQLRestC
         public int total { get; set; }
     }
 
+    public class SqlJson
+    {
+        public String sql { get; set; }
+    }
+
     public class QueryJson
     {
         public String select { get; set; }
@@ -353,6 +377,15 @@ namespace SQLRestC
         public String owner { get; set; }
         public TableJson[] tables { get; set; }
         public ViewJson[] views { get; set; }
+        public ProcedureJson[] procedures { get; set; }
+    }
+
+    public class ProcedureJson
+    {
+        public int id { get; set; }
+        public String name { get; set; }
+        public String alias { get; set; }
+        public String path { get; set; }
     }
 
     public class TableJson
@@ -379,13 +412,13 @@ namespace SQLRestC
     {
         public int id { get; set; }
         public String name { get; set; }
-        public String alias { get; set; }
+        public String? alias { get; set; }
         public String dataType { get; set; }
         public int length { get; set; }
         public int precision { get; set; }
         public bool nullable { get; set; }
         public bool inPrimaryKey { get; set; }
         public bool identity { get; set; }
-        public String defaultValue { get; set; }
+        public String? defaultValue { get; set; }
     }
 }

@@ -1,12 +1,12 @@
 var GEOServer={
 	XMLParser:new DOMParser(),
 	queryMetadata:function(url,onok){
-		var self=this;
+		var that=this;
 		var xhr=new XMLHttpRequest();
 		xhr.onreadystatechange=function(){
 			if(this.readyState==XMLHttpRequest.DONE){
 				if(this.status==0||(this.status>=200&&this.status<400))
-					onok(self.XMLParser.parseFromString(this.response,"text/xml"));
+					onok(that.XMLParser.parseFromString(this.response,"text/xml"));
 				else
 					this.onerror(this.response);
 			}

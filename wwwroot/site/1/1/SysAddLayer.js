@@ -33,7 +33,6 @@ var SysAddLayer={
 		var self=this;
 		w2popup.open({
 			title: '🗺️ <i>Add layers from tables</i>',
-			modal:true,
 			width: 700,
 			height: 500,
 			body: '<div id="'+id+'" class="nut-full"></div>',
